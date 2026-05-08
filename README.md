@@ -113,7 +113,8 @@ PYTHONPATH=src python3 scripts/analyze_results.py \
   results/pilots/gate-h200.results.jsonl \
   --baseline-arm Base-Concise \
   --candidate-arm TokenizerAware-Newspeak \
-  --token-field output_tokens
+  --token-field output_tokens \
+  --bootstrap-iterations 1000
 ```
 
 ## Data and Results Policy

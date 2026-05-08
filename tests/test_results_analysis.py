@@ -51,6 +51,24 @@ def test_paired_success_reduction_uses_successful_intersection():
     assert reduction.median_candidate_tokens == 80
 
 
+def test_paired_success_reduction_can_report_bootstrap_ci():
+    reduction = paired_success_reduction(
+        [
+            _result("p1", "Base-English", 100, 120, success=True),
+            _result("p1", "TokenizerAware-Newspeak", 80, 95, success=True),
+            _result("p2", "Base-English", 200, 230, success=True),
+            _result("p2", "TokenizerAware-Newspeak", 100, 140, success=True),
+        ],
+        baseline_arm="Base-English",
+        candidate_arm="TokenizerAware-Newspeak",
+        bootstrap_iterations=20,
+        bootstrap_seed=5,
+    )
+
+    assert reduction.bootstrap_ci is not None
+    assert reduction.bootstrap_ci[0] <= reduction.bootstrap_ci[1]
+
+
 def test_paired_success_reduction_returns_nulls_without_pairs():
     reduction = paired_success_reduction(
         [_result("p1", "Base-English", 100, 120, success=False)],

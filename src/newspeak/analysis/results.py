@@ -9,6 +9,7 @@ from pathlib import Path
 from statistics import median
 from typing import Any
 
+from newspeak.analysis.bootstrap import paired_bootstrap_ci
 from newspeak.evals.success import primary_success
 
 
@@ -39,6 +40,7 @@ class PairedReduction:
     median_relative_reduction: float | None
     median_baseline_tokens: float | None
     median_candidate_tokens: float | None
+    bootstrap_ci: tuple[float, float] | None = None
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -49,6 +51,7 @@ class PairedReduction:
             "median_relative_reduction": self.median_relative_reduction,
             "median_baseline_tokens": self.median_baseline_tokens,
             "median_candidate_tokens": self.median_candidate_tokens,
+            "bootstrap_ci": self.bootstrap_ci,
         }
 
 
@@ -91,6 +94,9 @@ def paired_success_reduction(
     baseline_arm: str,
     candidate_arm: str,
     token_field: str = "output_tokens",
+    bootstrap_iterations: int = 0,
+    bootstrap_confidence: float = 0.95,
+    bootstrap_seed: int = 0,
 ) -> PairedReduction:
     by_key: dict[tuple[str, str], dict[str, Any]] = {}
     for record in records:
@@ -99,6 +105,7 @@ def paired_success_reduction(
     reductions: list[float] = []
     baseline_counts: list[float] = []
     candidate_counts: list[float] = []
+    paired_counts: list[tuple[float, float]] = []
     prompt_ids = {str(record["prompt_id"]) for record in records}
     for prompt_id in sorted(prompt_ids):
         baseline = by_key.get((prompt_id, baseline_arm))
@@ -113,7 +120,17 @@ def paired_success_reduction(
             continue
         baseline_counts.append(baseline_count)
         candidate_counts.append(candidate_count)
+        paired_counts.append((baseline_count, candidate_count))
         reductions.append((baseline_count - candidate_count) / baseline_count)
+
+    ci = None
+    if paired_counts and bootstrap_iterations > 0:
+        ci = paired_bootstrap_ci(
+            paired_counts,
+            iterations=bootstrap_iterations,
+            confidence=bootstrap_confidence,
+            seed=bootstrap_seed,
+        )
 
     return PairedReduction(
         baseline_arm=baseline_arm,
@@ -123,6 +140,7 @@ def paired_success_reduction(
         median_relative_reduction=float(median(reductions)) if reductions else None,
         median_baseline_tokens=float(median(baseline_counts)) if baseline_counts else None,
         median_candidate_tokens=float(median(candidate_counts)) if candidate_counts else None,
+        bootstrap_ci=ci,
     )
 
 

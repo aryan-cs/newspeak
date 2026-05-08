@@ -24,6 +24,9 @@ def main(argv: list[str] | None = None) -> int:
         default="output_tokens",
         choices=["prompt_tokens", "output_tokens", "total_tokens"],
     )
+    parser.add_argument("--bootstrap-iterations", type=int, default=0)
+    parser.add_argument("--bootstrap-confidence", type=float, default=0.95)
+    parser.add_argument("--bootstrap-seed", type=int, default=0)
     args = parser.parse_args(argv)
 
     records = load_result_records(args.jsonl)
@@ -39,6 +42,9 @@ def main(argv: list[str] | None = None) -> int:
             baseline_arm=args.baseline_arm,
             candidate_arm=args.candidate_arm,
             token_field=args.token_field,
+            bootstrap_iterations=args.bootstrap_iterations,
+            bootstrap_confidence=args.bootstrap_confidence,
+            bootstrap_seed=args.bootstrap_seed,
         ).to_dict()
 
     print(json.dumps(payload, indent=2, sort_keys=True))
