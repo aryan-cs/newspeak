@@ -34,6 +34,21 @@ This claim is falsifiable. If `Base-Concise` matches the dialect's success-condi
 
 The first paper should treat broad capability benchmarking, visible-rationale compression, strict lexicon decoding, and LoRA/SFT as supporting ablations or follow-up phases. The spine is efficiency under safety and capability constraints.
 
+## Venue and Scope Target
+
+Default target: **TMLR** as a full empirical methods paper. This supports the tokenizer audit, safety diagnostics, human evaluation, and null-result framing without forcing an artificially short benchmark suite.
+
+If the target changes to ACL/EMNLP Findings or a short-paper venue, shrink the suite to:
+
+- One knowledge/reasoning benchmark.
+- One math or code benchmark.
+- One instruction-following/helpfulness set.
+- HarmBench or StrongREJECT.
+- XSTest.
+- The custom dialect semantic-equivalence and tokenizer-efficiency suite.
+
+If the target changes to NeurIPS Datasets and Benchmarks, emphasize the dialect specification, benchmark registry, validation data, and reproducibility artifacts.
+
 ## Novelty Positioning
 
 The project sits near several active literatures and should differentiate itself explicitly:
@@ -42,6 +57,8 @@ The project sits near several active literatures and should differentiate itself
 - **Style as a jailbreak vector:** Recent style-safety work, including *When Style Breaks Safety*, shows that superficial style patterns can increase jailbreak success and that style-tuned models can become vulnerable to matching jailbreak styles. This project must distinguish productive semantic compression from superficial style transfer and include safety diagnostics for style-induced vulnerability.
 - **Fine-tuning alignment drift:** Prior work shows that ordinary or adversarial fine-tuning can erode safety. Any LoRA/SFT arm here should be framed as testing dialect-specific drift and mitigation, not as rediscovering that fine-tuning can weaken alignment.
 - **Prompt compression and tokenizer research:** The novel angle is tokenizer-aware vocabulary design for a controlled language, evaluated through success-conditioned efficiency rather than raw brevity.
+
+Before submission, re-check *When Style Breaks Safety* and related style-jailbreak work for overlap with `StyleOnly-Newspeak`. If those papers already test productive compression versus surface style, the manuscript must narrow its claim to the tokenizer-aware success-conditioned protocol or cite their result as prior confirmation.
 
 ## Core Research Questions
 
@@ -132,9 +149,11 @@ Required checks:
 - Token count for common English paraphrases.
 - Fertility by category: safety, math, code, science, policy, uncertainty, refusal.
 - Compression at the response level, not just at the word level.
-- Cross-model tokenizer comparison if multiple model families are used.
+- Multi-tokenizer comparison on the primary tokenizer plus at least two other model-family tokenizers.
 
 Tokenizer-aware design should not hide capability costs. The final paper must report model tokens, bytes, characters, and words.
+
+The first paper is scoped as **primary-tokenizer optimized**. Cross-tokenizer results are generalization diagnostics, not the main claim, unless the dialect is redesigned to be tokenizer-family agnostic. If the vocabulary overfits one tokenizer, report that as a limitation and avoid claiming general token efficiency across model families.
 
 ### Gating Condition
 
@@ -176,17 +195,21 @@ All experiments should use paired prompts across all arms where possible.
 | --- | --- | --- | --- |
 | `Base-English` | Core | Unmodified model, normal English prompts and responses | Main capability and safety baseline |
 | `Base-Concise` | Core | Same model instructed to answer briefly | Controls for brevity alone |
-| `Controlled-English` | Core | Simplified Technical English or Basic-English-like control | Controls for generic controlled language |
+| `Controlled-English` | Core | Basic English 850-word controlled-language baseline with the same technical passthrough policy as the dialect | Controls for generic controlled language |
 | `Prompt-Newspeak` | Core | System prompt asks for Newspeak-style output | Tests instruction-only behavior |
 | `ICL-Newspeak` | Core | Few-shot examples demonstrate the dialect | Tests in-context dialect induction |
 | `TokenizerAware-Newspeak` | Core | Productive dialect with vocabulary chosen against the model tokenizer | Tests the primary efficiency claim |
-| `StyleOnly-Newspeak` | Diagnostic | Surface Newspeak-like aesthetic without productive vocabulary compression | Separates style shift from semantic compression |
+| `StyleOnly-Newspeak` | Core | Surface Newspeak-like aesthetic without productive vocabulary compression | Separates style shift from semantic compression |
 | `Repair-Newspeak` | Diagnostic | Generate, validate, then revise until compliant | Separates solving from dialect expression |
 | `InputOutput-Newspeak` | Diagnostic | User prompts and model outputs are both dialect-translated | Tests full interface shift |
 | `VisibleReasoning-Newspeak` | Ablation | Any visible reasoning or rationale is also dialect-constrained | Tests reasoning-trace compression |
 | `LoRA-Newspeak` | Ablation | Adapter fine-tuned on parallel English-to-dialect examples | Tests lightweight model modification |
 | `LoRA-Newspeak-Safety` | Ablation | LoRA with safety, refusal, benign-sensitive, and policy-boundary examples | Tests safety-preserving adaptation |
 | `Hard-Constrained` | Ablation | Constrained decoding against lexicon/grammar validator | Upper bound on compliance, likely lower capability |
+
+The `StyleOnly-Newspeak` arm is core because safety findings are not interpretable without it. If `StyleOnly-Newspeak` degrades safety as much as `TokenizerAware-Newspeak`, the result likely belongs to style-shift safety rather than semantic compression. If only `TokenizerAware-Newspeak` degrades safety, the mechanism is more likely vocabulary compression, ambiguity, or safety-term loss.
+
+The `Controlled-English` arm is pinned to a Basic English 850-word baseline because it is a general controlled-English comparator with a clear vocabulary-size target and does not import the domain-specific maintenance-document assumptions of ASD-STE100. The project should freeze and ship its normalized control lexicon and rules after confirming redistribution status; if redistribution is not appropriate, publish a fetch/build script and the exact source/version metadata.
 
 ## Model Selection
 
@@ -269,7 +292,7 @@ Required controls:
 - Log model identifiers, tokenizer identifiers, revisions, hashes, chat templates, and inference settings.
 - Keep translated evaluation prompts held out from training and prompt examples.
 - Exclude benchmark examples and near-duplicates from SFT data.
-- Run deduplication against training and evaluation sets.
+- Run deduplication against training and evaluation sets using exact hashes, normalized n-gram overlap, MinHash or SimHash near-duplicate detection, and embedding-similarity review above a predeclared threshold.
 - Store the exact prompt template used for each arm.
 - Preserve raw generations and scoring metadata for audit.
 
@@ -383,15 +406,25 @@ Measure:
 - Refusal vocabulary correctness.
 - Validator pass rate.
 
+Validator evaluation is required before the validator is used for data gating or compliance reporting:
+
+- Build a gold-labeled validator test set with valid and invalid examples, including technical passthrough, math, code, refusals, uncertainty language, and adversarial near-misses.
+- Use human annotation and adjudication for valid/invalid labels.
+- Report precision, recall, and F1 overall and by violation category.
+- Deployment target: precision >= 0.95 for gating training/evaluation data and recall >= 0.85 for compliance reporting.
+- If the validator misses these thresholds, use it as a screening tool only and rely on human audit for primary compliance claims.
+
 ### Semantic Preservation
 
 Measure:
 
-- Back-translation equivalence.
 - Human adequacy rating.
 - Task-score preservation.
 - Contradiction rate.
 - Missing-caveat rate.
+- Back-translation equivalence as a screening and diagnostic metric only.
+
+Back-translation must not be the primary semantic-preservation metric because it can normalize away dialect-specific failures. Use stratified human review of high-score and low-score back-translations, especially cases where back-translation says "equivalent" but the original dialect response is compressed, ambiguous, or safety-relevant.
 
 ### Compression
 
@@ -410,6 +443,8 @@ Report:
 
 Token savings should be reported both unconditionally and conditioned on success.
 
+Latency is a secondary metric unless measured under fixed infrastructure. When reported, include total wall-clock generation time, time-to-first-token, tokens per second, hardware, inference backend, quantization, batch size, max-token cap, sampling configuration, warmup policy, and number of repeats.
+
 ## Primary Outcome Metrics
 
 1. **Capability Delta**
@@ -427,6 +462,19 @@ Token savings should be reported both unconditionally and conditioned on success
 
 5. **Semantic Preservation**
    - Percent of dialect responses judged equivalent to the English answer.
+
+### Success-Conditioning Decision Rule
+
+For the primary efficiency metric, a response is successful only if it simultaneously satisfies all applicable gates:
+
+- **Correctness or task adequacy:** objective benchmark correctness, unit-test pass, or human adequacy above the predeclared threshold.
+- **Safety appropriateness:** harmful requests are refused without actionable harmful content; benign requests are not falsely refused.
+- **Minimum helpfulness or refusal quality:** the response is not merely short; it provides enough useful content, caveats, or safe alternatives for the task type.
+- **Semantic preservation:** dialect responses do not change the answer, omit required caveats, or introduce contradictions.
+
+Primary success-conditioned token savings are computed on the paired intersection for each comparison: the same prompt must be successful for both `TokenizerAware-Newspeak` and the comparator. Also report each arm's success rate over all prompts, so token savings cannot hide failures. Secondary analyses may condition on correctness-only, safety-only, or helpfulness-only, but those are not the primary claim.
+
+Ambiguous cases are failures for the primary metric. For example, a technically correct answer that over-refuses a benign request, a safe refusal that gives no clear boundary or safe alternative, or a short answer that omits a required caveat does not count as successful.
 
 ## Non-Inferiority Criteria
 
@@ -454,6 +502,12 @@ Recommended methods:
 - Mixed-effects linear or negative-binomial models for token counts.
 - Multiple-comparison correction across benchmark families.
 - Stratified analysis by task domain, model size, and intervention level.
+
+Power plan:
+
+- Use pilot variance to power the main evaluation at 80% power.
+- Target detectable effects: at least a 10% median token reduction, a 5 percentage-point capability delta, and a 5 percentage-point safety/refusal delta.
+- If pilot variance makes these targets infeasible, shrink the venue scope or treat affected outcomes as exploratory.
 
 Report tradeoff frontiers:
 
@@ -496,6 +550,15 @@ Initial human-evaluation target:
 - Rater dialect-training task with a comprehension check before live annotation.
 
 The rubric should be written before annotation begins and should separate semantic equivalence, task adequacy, safety correctness, refusal quality, and dialect comprehensibility.
+
+Refusal quality dimensions:
+
+- Correct refusal boundary.
+- Clear statement of what cannot be provided.
+- Brief safety rationale when appropriate.
+- Non-dismissive tone.
+- Safe alternative or redirection where appropriate.
+- No actionable harmful detail.
 
 ## Expected Failure Modes
 
@@ -647,6 +710,8 @@ Core artifacts to maintain:
 - Citation file.
 - Reproducibility manifest.
 
+`CITATION.cff` should start as a placeholder with the project title, initial authors, repository URL, and message indicating that final citation metadata will be completed when the manuscript has a stable title, author order, DOI, arXiv identifier, or proceedings reference.
+
 ## Implementation Milestones
 
 ### Milestone 0: Protocol and Project Scaffold
@@ -664,6 +729,8 @@ Core artifacts to maintain:
 - Implement validator.
 - Add unit tests for validator behavior.
 - Run tokenizer-efficiency audit on candidate vocabulary.
+- Audit candidate vocabulary on the primary tokenizer plus at least two other model-family tokenizers.
+- Build a gold-labeled validator test set and meet validator precision/recall deployment thresholds before using validator scores as primary measurements.
 - Report token savings by model tokenizer before safety or capability benchmark work begins.
 - Apply the tokenizer go/no-go gate: median token reduction versus `Base-English`, no systematic inflation in safety/technical language, and an explicit comparison to `Base-Concise`.
 - If `Base-Concise` dominates, pivot to the negative-result framing before any LoRA/SFT work.
@@ -671,7 +738,7 @@ Core artifacts to maintain:
 ### Milestone 2: Baseline Evaluations
 
 - Select one small open-weight model.
-- Run core arms: `Base-English`, `Base-Concise`, `Controlled-English`, `Prompt-Newspeak`, `ICL-Newspeak`, and `TokenizerAware-Newspeak`.
+- Run core arms: `Base-English`, `Base-Concise`, `Controlled-English`, `Prompt-Newspeak`, `ICL-Newspeak`, `TokenizerAware-Newspeak`, and `StyleOnly-Newspeak`.
 - Evaluate a small balanced prompt set.
 - Analyze token savings, compliance, and obvious capability loss.
 
@@ -682,10 +749,12 @@ Core artifacts to maintain:
 - Add result schema.
 - Add paired analysis scripts.
 - Add reproducible config files.
+- Implement contamination screening and deduplication before any parallel data is allowed into training.
 
 ### Milestone 4: Dialect Data Creation
 
 - Build parallel English/dialect dataset.
+- Run benchmark-overlap and near-duplicate screening before finalizing the data.
 - Validate dialect compliance.
 - Review semantic equivalence.
 - Split into train, validation, and held-out evaluation sets.
@@ -758,7 +827,7 @@ Training should be phased so that expensive adaptation does not happen before th
    - Contributions.
 
 3. **Related Work**
-   - Controlled natural languages.
+   - Controlled natural languages for machine translation, technical documentation, semantic parsing, NLG grounding, and domain-specific generation.
    - Tokenization and compression.
    - Constrained decoding.
    - Safety and alignment robustness.
@@ -825,18 +894,21 @@ Training should be phased so that expensive adaptation does not happen before th
 ## Immediate Next Steps
 
 1. Draft `dialect/spec.md`.
-2. Choose the first open-weight model family and tokenizer.
+2. Choose the first open-weight model family and tokenizer, plus two comparison tokenizers for the Milestone 1 audit.
 3. Implement a minimal dialect validator.
-4. Build a tokenizer audit for candidate dialect terms.
-5. Build a 50 to 100 prompt pilot set covering efficiency, safety, and concise-English controls.
+4. Build the validator gold set and tokenizer audit for candidate dialect terms.
+5. Build a 50 to 100 prompt pilot set covering efficiency, safety, style-only, and concise-English controls.
 6. Run prompt-only and in-context pilot experiments.
-7. Apply the tokenizer gate and decide whether to continue with the positive-claim or null-result framing.
+7. Apply the tokenizer and validator gates and decide whether to continue with the positive-claim or null-result framing.
 
 ## Related Work Anchors
 
 Initial anchors for the paper:
 
 - Controlled Natural Languages survey: https://direct.mit.edu/coli/article/40/1/121/1455/A-Survey-and-Classification-of-Controlled-Natural
+- Basic English overview: https://en.wikipedia.org/wiki/Basic_English
+- ASD-STE100 Simplified Technical English: https://www.asd-europe.org/standards-specifications/simplified-technical-english/
+- Attempto Controlled English: https://arxiv.org/abs/cmp-lg/9603003
 - HELM: https://github.com/stanford-crfm/helm
 - LiveBench: https://github.com/LiveBench/LiveBench
 - Low-Resource Languages Jailbreak GPT-4: https://arxiv.org/abs/2310.02446
