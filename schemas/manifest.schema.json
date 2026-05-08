@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/aryan-cs/newspeak/schemas/manifest.schema.json",
+  "title": "Manifest Entry",
+  "type": "object",
+  "required": ["entry_id", "status", "repo_commit", "artifacts"],
+  "properties": {
+    "entry_id": {"type": "string"},
+    "status": {"type": "string"},
+    "repo_commit": {"type": "string"},
+    "remote_url": {"type": "string"},
+    "model": {"type": "object"},
+    "tokenizer": {"type": "object"},
+    "datasets": {"type": "array", "items": {"type": "object"}},
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "sha256"],
+        "properties": {
+          "path": {"type": "string"},
+          "sha256": {"type": "string"},
+          "bytes": {"type": "integer", "minimum": 0}
+        }
+      }
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/aryan-cs/newspeak/schemas/prompt_set.schema.json",
+  "title": "Newspeak Prompt Set Record",
+  "type": "object",
+  "required": [
+    "prompt_id",
+    "split_role",
+    "source_type",
+    "task_category",
+    "safety_category",
+    "prompt",
+    "holdout"
+  ],
+  "properties": {
+    "prompt_id": {"type": "string"},
+    "split_role": {
+      "type": "string",
+      "enum": ["smoke", "gate", "main_eval", "human_eval", "training_candidate"]
+    },
+    "source_type": {
+      "type": "string",
+      "enum": ["custom_authored", "benchmark", "derived_translation"]
+    },
+    "source_ref": {"type": ["string", "null"]},
+    "task_category": {"type": "string"},
+    "safety_category": {"type": "string"},
+    "prompt": {"type": "string"},
+    "expected_scoring": {"type": ["string", "null"]},
+    "holdout": {"type": "boolean"},
+    "notes": {"type": "string"}
+  },
+  "additionalProperties": false
+}

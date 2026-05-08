@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/aryan-cs/newspeak/schemas/validator_gold.schema.json",
+  "title": "Validator Gold Record",
+  "type": "object",
+  "required": [
+    "id",
+    "target",
+    "text",
+    "expected_valid",
+    "violation_types",
+    "notes",
+    "annotator_batch_id"
+  ],
+  "properties": {
+    "id": {"type": "string"},
+    "target": {"type": "string", "enum": ["dialect", "structured_simple"]},
+    "text": {"type": "string"},
+    "expected_valid": {"type": "boolean"},
+    "violation_types": {"type": "array", "items": {"type": "string"}},
+    "notes": {"type": "string"},
+    "annotator_batch_id": {"type": "string"}
+  },
+  "additionalProperties": false
+}
