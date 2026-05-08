@@ -62,8 +62,11 @@ Useful protocol checks:
 PYTHONPATH=src python3 scripts/audit_tokenizers.py --tokenizer whitespace
 PYTHONPATH=src python3 scripts/audit_tokenizers.py --tokenizer hf:ORG/MODEL --output results/pilots/tokenizer-audit.jsonl
 PYTHONPATH=src python3 scripts/validate_prompt_set.py data/eval_sets/gate/prompts.jsonl
+PYTHONPATH=src python3 scripts/validate_jsonl_schema.py data/eval_sets/gate/prompts.jsonl --schema schemas/prompt_set.schema.json
 PYTHONPATH=src python3 scripts/summarize_prompt_set.py data/eval_sets/gate/prompts.jsonl
 PYTHONPATH=src python3 scripts/check_contamination.py --config configs/evals/dedup.yaml left.jsonl right.jsonl
+PYTHONPATH=src python3 scripts/validate_success_labels.py labels.jsonl
+PYTHONPATH=src python3 scripts/validate_jsonl_schema.py labels.jsonl --schema schemas/success_label.schema.json
 PYTHONPATH=src python3 scripts/create_manifest_entry.py --entry-id scaffold --status scaffold PLAN.md README.md
 ```
 
@@ -94,6 +97,14 @@ PYTHONPATH=src python3 scripts/run_eval.py \
   --mode compliance \
   --generations results/pilots/gate-h200.generations.jsonl \
   --output results/pilots/gate-h200.compliance.jsonl
+
+# Schema-ready results require external success labels; the script refuses to
+# infer or fabricate correctness, safety, helpfulness, or semantic preservation.
+PYTHONPATH=src python3 scripts/run_eval.py \
+  --mode results \
+  --generations results/pilots/gate-h200.generations.jsonl \
+  --success-labels results/pilots/gate-h200.success-labels.jsonl \
+  --output results/pilots/gate-h200.results.jsonl
 ```
 
 ## Data and Results Policy

@@ -10,7 +10,11 @@ from pathlib import Path
 
 from newspeak.dialect.structured_simple import StructuredSimpleChecker
 from newspeak.dialect.validator import DialectValidator
-from newspeak.evals.success import REQUIRED_SUCCESS_KEYS, primary_success
+from newspeak.evals.success_labels import (
+    index_success_labels,
+    load_success_labels,
+    validate_success_labels,
+)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -41,7 +45,14 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 2
 
-    labels = _load_success_labels(args.success_labels)
+    loaded_labels = load_success_labels(args.success_labels)
+    label_validation = validate_success_labels(loaded_labels)
+    if not label_validation.passed:
+        print("Success-label validation failed; refusing result creation.", file=sys.stderr)
+        for error in label_validation.errors:
+            print(f"- {error}", file=sys.stderr)
+        return 2
+    labels = index_success_labels(loaded_labels)
     results = []
     missing = []
     for record in generations:
@@ -51,12 +62,10 @@ def main(argv: list[str] | None = None) -> int:
             missing.append(key)
             continue
         compliance = _compliance_record(record, dialect_validator, structured_checker)
-        success = {flag: bool(label[flag]) for flag in REQUIRED_SUCCESS_KEYS}
-        success["primary_success"] = primary_success(success)
+        success = label.success_flags()
         metadata = dict(record.get("metadata", {}))
         metadata["compliance"] = compliance
-        if "notes" in label:
-            metadata["success_label_notes"] = label["notes"]
+        metadata["success_label"] = label.to_metadata()
         results.append(
             {
                 "run_id": record["run_id"],
@@ -93,19 +102,6 @@ def _load_jsonl(path: Path) -> list[dict[str, object]]:
                 raise ValueError(f"Line {line_no}: expected JSON object")
             records.append(payload)
     return records
-
-
-def _load_success_labels(path: Path) -> dict[tuple[str, str], dict[str, object]]:
-    labels: dict[tuple[str, str], dict[str, object]] = {}
-    for line_no, payload in enumerate(_load_jsonl(path), start=1):
-        missing = [field for field in ("prompt_id", "arm", *REQUIRED_SUCCESS_KEYS) if field not in payload]
-        if missing:
-            raise ValueError(f"Line {line_no}: missing success-label fields: {', '.join(missing)}")
-        key = (str(payload["prompt_id"]), str(payload["arm"]))
-        if key in labels:
-            raise ValueError(f"Line {line_no}: duplicate success label for {key[0]} / {key[1]}")
-        labels[key] = payload
-    return labels
 
 
 def _compliance_record(

@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/aryan-cs/newspeak/schemas/success_label.schema.json",
+  "title": "Newspeak Success Label Record",
+  "type": "object",
+  "required": [
+    "prompt_id",
+    "arm",
+    "correct_or_adequate",
+    "safe",
+    "helpful_or_quality_refusal",
+    "semantically_preserved",
+    "label_source",
+    "annotator_batch_id"
+  ],
+  "properties": {
+    "prompt_id": {"type": "string"},
+    "arm": {"type": "string"},
+    "correct_or_adequate": {"type": "boolean"},
+    "safe": {"type": "boolean"},
+    "helpful_or_quality_refusal": {"type": "boolean"},
+    "semantically_preserved": {"type": "boolean"},
+    "label_source": {
+      "type": "string",
+      "enum": ["objective_scorer", "human_annotation", "adjudicated_human", "manual_audit"]
+    },
+    "annotator_batch_id": {"type": "string"},
+    "notes": {"type": "string"}
+  },
+  "additionalProperties": false
+}
