@@ -30,6 +30,37 @@ class WhitespaceTokenizer:
         return len(text.split())
 
 
+class HuggingFaceTokenizer:
+    def __init__(self, tokenizer_id: str, revision: str | None = None) -> None:
+        from transformers import AutoTokenizer
+
+        kwargs = {"revision": revision} if revision else {}
+        self.tokenizer_id = tokenizer_id
+        self.revision = revision
+        self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_id, **kwargs)
+        self.name = f"hf:{tokenizer_id}" if revision is None else f"hf:{tokenizer_id}@{revision}"
+
+    def count(self, text: str) -> int:
+        return len(self.tokenizer.encode(text, add_special_tokens=False))
+
+
+class TiktokenTokenizer:
+    def __init__(self, encoding_or_model: str) -> None:
+        import tiktoken
+
+        self.encoding_or_model = encoding_or_model
+        try:
+            self.encoding = tiktoken.encoding_for_model(encoding_or_model)
+            prefix = "tiktoken_model"
+        except KeyError:
+            self.encoding = tiktoken.get_encoding(encoding_or_model)
+            prefix = "tiktoken"
+        self.name = f"{prefix}:{encoding_or_model}"
+
+    def count(self, text: str) -> int:
+        return len(self.encoding.encode(text))
+
+
 @dataclass(frozen=True)
 class AuditRow:
     term: str
@@ -70,6 +101,21 @@ def audit_terms(
             )
         )
     return rows
+
+
+def tokenizer_from_spec(spec: str) -> TokenizerLike:
+    if spec == "whitespace":
+        return WhitespaceTokenizer()
+    if spec.startswith("hf:"):
+        body = spec.removeprefix("hf:")
+        tokenizer_id, _, revision = body.partition("@")
+        return HuggingFaceTokenizer(tokenizer_id=tokenizer_id, revision=revision or None)
+    if spec.startswith("tiktoken:"):
+        return TiktokenTokenizer(spec.removeprefix("tiktoken:"))
+    raise ValueError(
+        "Unknown tokenizer spec. Use 'whitespace', 'hf:ORG/MODEL[@REVISION]', "
+        "or 'tiktoken:ENCODING_OR_MODEL'."
+    )
 
 
 def load_terms_from_lexicon(path: Path) -> list[str]:

@@ -59,6 +59,8 @@ PYTHONPATH=src python3 scripts/check_protocol_consistency.py
 Useful protocol checks:
 
 ```bash
+PYTHONPATH=src python3 scripts/audit_tokenizers.py --tokenizer whitespace
+PYTHONPATH=src python3 scripts/audit_tokenizers.py --tokenizer hf:ORG/MODEL --output results/pilots/tokenizer-audit.jsonl
 PYTHONPATH=src python3 scripts/validate_prompt_set.py data/eval_sets/gate/prompts.jsonl
 PYTHONPATH=src python3 scripts/summarize_prompt_set.py data/eval_sets/gate/prompts.jsonl
 PYTHONPATH=src python3 scripts/check_contamination.py --config configs/evals/dedup.yaml left.jsonl right.jsonl
