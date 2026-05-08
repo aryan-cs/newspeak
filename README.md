@@ -61,6 +61,9 @@ Useful protocol checks:
 ```bash
 PYTHONPATH=src python3 scripts/audit_tokenizers.py --tokenizer whitespace
 PYTHONPATH=src python3 scripts/audit_tokenizers.py --tokenizer hf:ORG/MODEL --output results/pilots/tokenizer-audit.jsonl
+PYTHONPATH=src python3 scripts/validate_model_config.py
+PYTHONPATH=src python3 scripts/check_readiness.py --milestone 1
+PYTHONPATH=src python3 scripts/check_readiness.py --milestone 2
 PYTHONPATH=src python3 scripts/validate_prompt_set.py data/eval_sets/gate/prompts.jsonl
 PYTHONPATH=src python3 scripts/validate_jsonl_schema.py data/eval_sets/gate/prompts.jsonl --schema schemas/prompt_set.schema.json
 PYTHONPATH=src python3 scripts/summarize_prompt_set.py data/eval_sets/gate/prompts.jsonl
