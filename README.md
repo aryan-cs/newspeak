@@ -65,6 +65,35 @@ PYTHONPATH=src python3 scripts/check_contamination.py --config configs/evals/ded
 PYTHONPATH=src python3 scripts/create_manifest_entry.py --entry-id scaffold --status scaffold PLAN.md README.md
 ```
 
+Generation pipeline:
+
+```bash
+# Mac-safe: writes request records only, with no model outputs.
+PYTHONPATH=src python3 scripts/run_generation.py \
+  --backend prepare \
+  --prompt-set data/eval_sets/gate/prompts.jsonl \
+  --arm Base-English \
+  --run-id gate-prep \
+  --model-id MODEL_ID \
+  --output data/interim/gate-prep.requests.jsonl
+
+# Heavy inference is guarded to run only inside /home/aryang9/sandbox/newspeak.
+PYTHONPATH=src python3 scripts/run_generation.py \
+  --backend transformers \
+  --prompt-set data/eval_sets/gate/prompts.jsonl \
+  --arm Base-English \
+  --run-id gate-h200 \
+  --model-id MODEL_ID \
+  --output results/pilots/gate-h200.generations.jsonl \
+  --resume
+
+# Compliance reports do not create success labels.
+PYTHONPATH=src python3 scripts/run_eval.py \
+  --mode compliance \
+  --generations results/pilots/gate-h200.generations.jsonl \
+  --output results/pilots/gate-h200.compliance.jsonl
+```
+
 ## Data and Results Policy
 
 Generated data, model outputs, checkpoints, and result files are ignored unless

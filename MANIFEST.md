@@ -24,6 +24,8 @@ before any public result, paper draft, model release, or data release.
 - Hardware, backend, quantization, batch size, and latency-measurement settings.
 - Contamination and deduplication report paths.
 - Result file paths and checksums.
+- Raw generation file paths and checksums.
+- Success-label file paths and annotation batch IDs.
 - Per-artifact relative paths and checksums.
 - Repository commit SHA and remote URL.
 
