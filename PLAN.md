@@ -28,7 +28,7 @@ The first paper should be narrower than the full research program.
 
 Primary claim:
 
-> A tokenizer-aware productive controlled dialect can achieve statistically significant success-conditioned token savings relative to normal English, and its value must be judged against concise-English and generic controlled-English controls while preserving capability and safety within predeclared non-inferiority margins.
+> A tokenizer-aware productive controlled dialect can achieve statistically significant success-conditioned token savings relative to normal English, and its value must be judged against concise-English and `StructuredSimple-English` controls while preserving capability and safety within predeclared non-inferiority margins.
 
 This claim is falsifiable. If `Base-Concise` matches the dialect's success-conditioned token savings without additional safety or capability cost, the paper should report a negative result: structured dialect design does not outperform simple brevity prompting for efficiency, even if it improves dialect compliance. That outcome is still publishable if the protocol is clean because it separates linguistic structure from ordinary concision.
 
@@ -161,7 +161,7 @@ Tokenizer efficiency is a go/no-go gate before large-scale evaluation or fine-tu
 
 Before moving past the dialect prototype, the project must show on a representative gate set that the productive dialect produces meaningful model-token savings relative to normal English and is not trivially dominated by concise English. The gate should use at least 200 prompts before success-conditioning and should retain at least 120 successful paired items after success-conditioning. If fewer than 120 paired items survive, expand the gate set or treat the decision as provisional.
 
-The exact gate should be revised after smoke-test variance estimates, but a reasonable starting point is:
+The starting gate below should be used for planning. It may be revised after the 50 to 100 prompt smoke test, but the final gate must be frozen before the 200+ prompt gate set is run:
 
 - At least 10% median output-token reduction versus `Base-English` on successful responses.
 - Paired bootstrap confidence interval with positive direction for the token-reduction effect.
@@ -190,6 +190,30 @@ The repository should include a formal dialect specification with:
 
 The dialect must include enough vocabulary for safe, honest refusals. A compressed language that cannot express uncertainty, risk, consent, legality, or harm is not a viable aligned assistant interface.
 
+## StructuredSimple-English Comparator Specification
+
+`StructuredSimple-English` is a purpose-built comparator arm. It must be specified and frozen in `dialect/structured_simple_spec.md` before Milestone 2 begins.
+
+Purpose:
+
+- Control for structured linguistic constraint without importing a competing controlled-language philosophy.
+- Match the dialect's sentence-shape, productive-morphology slots, safety/refusal vocabulary, and technical passthrough policy.
+- Remove the Newspeak-inspired semantic compression and tokenizer-aware vocabulary objective.
+
+Rules:
+
+- Use short plain-English sentences, with a starting target of 20 words or fewer per sentence. This cap is provisional during smoke testing and must be frozen before the gate set.
+- Use one main idea per sentence.
+- Permit productive negation and degree morphology only when realized as idiomatic plain English or as explicitly allowed rule slots shared with the dialect.
+- Use the same technical passthrough policy as the dialect: domain terms, code, math notation, proper nouns, citations, and numeric expressions pass through without modification.
+- Do not use tokenizer-aware vocabulary substitution, compressed coinages, or rare-token substitutions.
+- Do not enforce a closed lexicon. This is a sentence-structure and morphology control, not a minimal-vocabulary language.
+- Use the same safety, refusal, ambiguity, and uncertainty vocabulary as the dialect where appropriate.
+
+A lightweight rule-checker for sentence length and morphology rules should be built alongside the dialect validator. Compliance for `StructuredSimple-English` is a secondary diagnostic metric and is not used as a training-data gate.
+
+Basic English is a rejected comparator for the core experiment because its 850-word vocabulary and paraphrase-heavy operator-verb philosophy test a different theory: human learnability and readability rather than tokenizer-aware productive compression. It remains related-work context, not a core arm.
+
 ## Model Intervention Arms
 
 All experiments should use paired prompts across all arms where possible.
@@ -212,11 +236,9 @@ All experiments should use paired prompts across all arms where possible.
 
 The `StyleOnly-Newspeak` arm is core because safety findings are not interpretable without it. If `StyleOnly-Newspeak` degrades safety as much as `TokenizerAware-Newspeak`, the result likely belongs to style-shift safety rather than semantic compression. If only `TokenizerAware-Newspeak` degrades safety, the mechanism is more likely vocabulary compression, ambiguity, or safety-term loss.
 
-The `StructuredSimple-English` arm should be purpose-built for this study rather than imported from Basic English or ASD-STE100. It uses the same sentence-shape constraints, productive-morphology template, technical passthrough rules, validator categories, and approximate lexicon-size budget as the Newspeak-inspired dialect, but with neutral plain-English roots and no tokenizer-aware compression objective. This controls for structured linguistic constraint without importing a competing controlled-language philosophy.
+The `StructuredSimple-English` arm is defined in `dialect/structured_simple_spec.md` and frozen before Milestone 2. It is purpose-built for this study rather than imported from Basic English or ASD-STE100.
 
-Basic English is a rejected comparator for the core experiment because its 850-word vocabulary and paraphrase-heavy operator-verb philosophy test a different theory: human learnability and readability rather than tokenizer-aware productive compression. It can remain related-work context, not a core arm.
-
-The constrained-decoding arm is only called `Hard-Constrained` if generation is constrained by a token-level or finite-state legality mechanism with near-zero false accepts on the compliance gold set. If it uses the ordinary response-level validator, report it as `HighCompliance-Constrained`, not as a strict upper bound.
+The constrained-decoding arm is only called `Hard-Constrained` if generation is constrained by a token-level or finite-state legality mechanism with zero false accepts on the compliance gold set plus manual audit. If it uses the ordinary response-level validator, report it as `HighCompliance-Constrained`, not as a strict upper bound.
 
 ## Model Selection
 
@@ -249,6 +271,21 @@ The project needs evaluation coverage for:
 - Bias and fairness.
 - Dialect compliance.
 - Semantic equivalence.
+
+### Gate and Pilot Prompt Sets
+
+Smoke-test and gate prompt sets are evaluation-only artifacts.
+
+Requirements:
+
+- The smoke-test set should contain 50 to 100 prompts for variance estimation and obvious failure detection.
+- The gate set should contain at least 200 prompts before success-conditioning and should retain at least 120 successful paired items after conditioning.
+- Both sets must be authored or selected, screened, versioned, checksummed, and frozen before use in Milestone 2.
+- Both sets must be screened for benchmark overlap before use.
+- Both sets must be excluded from later SFT, repair, synthetic-data, translation-example, and few-shot example pools.
+- Each set needs a data card stating source, construction method, task mix, safety mix, intended role, and holdout status.
+
+If gate prompts come from existing benchmarks, those prompt IDs are frozen and excluded from training. If gate prompts are custom-authored, the data card must be completed before generation runs begin.
 
 ### Parallel Dialect Data
 
@@ -298,6 +335,7 @@ Required controls:
 - Pin benchmark names, versions, splits, and licenses.
 - Log model identifiers, tokenizer identifiers, revisions, hashes, chat templates, and inference settings.
 - Keep translated evaluation prompts held out from training and prompt examples.
+- Keep smoke-test and gate prompts held out from later training, repair, synthetic-data, translation-example, and few-shot pools.
 - Exclude benchmark examples and near-duplicates from SFT data.
 - Run deduplication against training and evaluation sets using exact hashes, normalized n-gram overlap, MinHash or SimHash near-duplicate detection, and embedding-similarity review above a predeclared threshold.
 - Store the exact prompt template used for each arm.
@@ -421,6 +459,8 @@ Validator evaluation is required before the validator is used for data gating or
 - Deployment target: precision >= 0.95 for gating training/evaluation data and recall >= 0.85 for compliance reporting.
 - If the validator misses these thresholds, use it as a screening tool only and rely on human audit for primary compliance claims.
 
+`StructuredSimple-English` compliance is not measured with the dialect validator. Its lightweight rule-checker covers sentence length, one-idea-per-sentence structure, technical passthrough, and allowed morphology. Compliance for this arm is a secondary diagnostic metric and is not used as a data gate in the first paper.
+
 ### Semantic Preservation
 
 Measure:
@@ -485,7 +525,7 @@ Ambiguous cases are failures for the primary metric. For example, a technically 
 
 ## Non-Inferiority Criteria
 
-Define these before running the main experiment.
+Final non-inferiority margins must be locked before the main experiment begins. Any revision from the starting criteria requires a documented justification in the decision log. These margins should not drift between pilot and main experiment.
 
 Example starting criteria:
 
@@ -494,7 +534,7 @@ Example starting criteria:
 - Helpfulness-preserving if pairwise preference loss is within a predeclared margin after length-bias correction.
 - Efficient only if success-conditioned total-token reduction is statistically significant and practically meaningful against both `Base-English` and `Base-Concise`.
 
-These margins should be revisited after pilot variance estimates.
+The starting criteria may be revised after pilot variance estimates, but the final margins must then be locked before the main experiment.
 
 ## Statistical Analysis
 
@@ -513,7 +553,8 @@ Recommended methods:
 Power plan:
 
 - Use pilot variance to power the main evaluation at 80% power.
-- Target detectable effects: at least a 10% median token reduction, a 5 percentage-point capability delta, and a 5 percentage-point safety/refusal delta.
+- Target detectable effects: at least a 10% median token reduction and a 5 percentage-point capability delta.
+- Safety non-inferiority should use the stricter 1 to 2 percentage-point harmful-compliance margin above. If pilot variance makes that infeasible, increase the safety sample or report safety as a confidence-interval boundary condition rather than a powered superiority-style test.
 - If pilot variance makes these targets infeasible, shrink the venue scope or treat affected outcomes as exploratory.
 
 Report tradeoff frontiers:
@@ -661,9 +702,13 @@ newspeak/
   configs/
     models/
     evals/
+      registry.yaml
     training/
+  schemas/
+    results.schema.json
   dialect/
     spec.md
+    structured_simple_spec.md
     schema.md
     lexicon.yaml
     morphology.yaml
@@ -674,9 +719,12 @@ newspeak/
     interim/
     processed/
     eval_sets/
+      validator_gold/
     cards/
+      model_cards/
   scripts/
     validate_dialect.py
+    validate_structured_simple.py
     translate_dataset.py
     run_generation.py
     run_eval.py
@@ -704,11 +752,14 @@ Generated data, model outputs, and checkpoints should be excluded from git unles
 Core artifacts to maintain:
 
 - Dialect specification.
+- `StructuredSimple-English` specification.
 - Lexicon schema.
 - Validator.
+- Lightweight structured-simple rule-checker.
+- Validator gold set and evaluation report.
 - Benchmark registry.
 - Experiment configs.
-- Data cards.
+- Data cards, including smoke-test and gate prompt-set cards.
 - Model cards for adapted models.
 - Evaluation harness.
 - Results schema.
@@ -727,11 +778,16 @@ Minimum manifest fields:
 - Tokenizer versions and tokenizer checksums.
 - Dataset names, versions, splits, licenses, and checksums.
 - Prompt-set IDs and checksums.
+- `StructuredSimple-English` spec version and rule-checker version.
+- Dependency lockfile hash.
+- Benchmark, evaluator, and judge versions.
+- Human-evaluation rubric version and annotation batch IDs.
 - Inference config, seeds, sampling parameters, and max-token settings.
 - Hardware, backend, quantization, batch size, and latency-measurement settings.
 - Validator version and validator test-set results.
 - Contamination and deduplication report paths.
 - Result file paths and checksums.
+- Per-artifact relative paths and checksums.
 - Repository commit SHA and remote URL.
 
 Update cadence: after every milestone that produces reportable artifacts, and before any public result, paper draft, model release, or data release.
@@ -749,14 +805,16 @@ Update cadence: after every milestone that produces reportable artifacts, and be
 ### Milestone 1: Dialect Prototype
 
 - Draft dialect spec.
+- Draft `dialect/structured_simple_spec.md` and freeze it before Milestone 2.
 - Create initial lexicon and morphology rules.
 - Implement validator.
-- Add unit tests for validator behavior.
+- Implement the lightweight `StructuredSimple-English` rule-checker.
+- Add unit tests for validator and structured-simple checker behavior.
 - Run tokenizer-efficiency audit on candidate vocabulary.
 - Audit candidate vocabulary on the primary tokenizer plus at least two other model-family tokenizers.
 - Build a gold-labeled validator test set and meet validator precision/recall deployment thresholds before using validator scores as primary measurements.
 - Report lexical tokenization results by model tokenizer before safety or capability benchmark work begins.
-- Freeze the tokenizer go/no-go criteria for the generated-response gate used in Milestone 2.
+- Draft initial tokenizer go/no-go criteria for the generated-response gate used in Milestone 2.
 
 ### Milestone 2: Baseline Evaluations
 
@@ -765,6 +823,7 @@ Update cadence: after every milestone that produces reportable artifacts, and be
 - Screen pilot and gate prompts before use.
 - Run a 50 to 100 prompt smoke test first, then a 200+ prompt gate set before making the tokenizer go/no-go decision.
 - Require at least 120 successful paired items after success-conditioning, or expand the gate set.
+- Freeze final tokenizer go/no-go criteria after the smoke test and before running the 200+ prompt gate set.
 - Apply the tokenizer go/no-go gate: median token reduction versus `Base-English`, no systematic inflation in safety/technical language, paired bootstrap uncertainty, and an explicit comparison to `Base-Concise`.
 - If `Base-Concise` dominates, pivot to the negative-result framing before any LoRA/SFT work.
 - Version, checksum, and freeze all pilot and gate prompts as evaluation-only.
@@ -836,7 +895,7 @@ Training should be phased so that expensive adaptation does not happen before th
 4. **High-Compliance Constrained Decoding**
    - Use as an ablation for strict or near-strict compliance.
    - Expect lower capability on open-ended and technical tasks.
-   - Call this arm `Hard-Constrained` only if generation is constrained by a token-level or finite-state legality mechanism with near-zero false accepts on the compliance gold set. If it uses the ordinary response-level validator, report it as `HighCompliance-Constrained`.
+   - Call this arm `Hard-Constrained` only if generation is constrained by a token-level or finite-state legality mechanism with zero false accepts on the compliance gold set plus manual audit. If it uses the ordinary response-level validator, report it as `HighCompliance-Constrained`.
 
 5. **LoRA or SFT**
    - Train only after the dialect spec and validator are stable.
@@ -858,7 +917,7 @@ Training should be phased so that expensive adaptation does not happen before th
 
 3. **Related Work**
    - Controlled natural languages for machine translation, technical documentation, semantic parsing, NLG grounding, and domain-specific generation.
-   - Text simplification, lexical simplification, minimal-vocabulary generation, and controllable simplification from 2018 to present.
+   - Text simplification, lexical simplification, and controllable simplification from 2018 to present.
    - Tokenization and compression.
    - Constrained decoding.
    - Safety and alignment robustness.
@@ -867,6 +926,7 @@ Training should be phased so that expensive adaptation does not happen before th
 4. **Dialect Design**
    - Newspeak-inspired principles.
    - Original dialect spec.
+   - `StructuredSimple-English` comparator.
    - Strict vs productive constraints.
    - Validator and tokenizer-aware design.
 
@@ -903,6 +963,7 @@ Training should be phased so that expensive adaptation does not happen before th
    - Judge reliability.
    - Latent reasoning unobservability.
    - Compute limits.
+   - Primary-tokenizer scope.
 
 10. **Ethics and Safety**
     - Handling harmful prompts.
@@ -912,25 +973,36 @@ Training should be phased so that expensive adaptation does not happen before th
 11. **Conclusion**
     - Summarize when constrained language helps, hurts, or changes alignment.
 
-## Initial Decision Log
+## Decision Log
 
-- Use a productive controlled dialect as the main condition.
-- Keep strict lexicon enforcement as an ablation.
-- Treat exact novel vocabulary as inspiration, not as a copied dataset.
-- Start with prompting and in-context learning before fine-tuning.
-- Fine-tune only after the dialect validator and evaluation harness are stable.
-- Report success-conditioned token savings rather than raw brevity alone.
-- Evaluate both harmful compliance and over-refusal.
+| Decision | Rationale | Status | Locked Date | Revision Trigger |
+| --- | --- | --- | --- | --- |
+| Use a productive controlled dialect as the main condition | Strict lexicon enforcement confounds capability with expressiveness | Active | Before Milestone 1 | Pilot shows productive rules are not learnable |
+| Keep strict lexicon enforcement as an ablation | Isolates the cost of maximal constraint without making it the main claim | Active | Before Milestone 2 | High-compliance arm proves infeasible |
+| Treat exact *Nineteen Eighty-Four* vocabulary as inspiration only | The novel should be treated as under U.S. copyright through 2044 | Active | Milestone 0 | Legal review changes publication guidance |
+| Use `StructuredSimple-English` as the controlled-language comparator, not Basic English | Basic English tests human learnability/readability; `StructuredSimple-English` uses the same control framework without tokenizer-aware compression | Active | Before Milestone 2 | Comparator spec fails smoke-test compliance |
+| Promote `StyleOnly-Newspeak` to a core arm | Safety findings are uninterpretable without separating surface style from semantic compression | Active | Milestone 0 | Later style-safety literature makes the arm redundant |
+| Scope first paper to primary-tokenizer optimization | Prevents overclaiming cross-tokenizer generality | Active | Before Milestone 1 | Multi-tokenizer audit shows robust cross-family savings |
+| Require 200+ gate prompts and 120 successful paired items | Makes the tokenizer gate less sensitive to success-conditioning attrition | Active | Before Milestone 2 gate | Smoke-test variance requires a larger gate |
+| Start with prompting and in-context learning before fine-tuning | Prevents compute waste before the dialect and validator are stable | Active | Milestone 0 | Prompting cannot produce measurable compliance |
+| Fine-tune only after the dialect validator and evaluation harness are stable | Avoids alignment-drift claims on a moving target | Active | Before Milestone 5 | None without protocol amendment |
+| Report success-conditioned token savings rather than raw brevity alone | Raw savings can hide quality, capability, or safety degradation | Active | Milestone 0 | None without protocol amendment |
+| Evaluate both harmful compliance and over-refusal | Safety is a two-sided constraint | Active | Milestone 0 | None without protocol amendment |
+| Pre-register null-result framing before experiments begin | Prevents a negative result from being treated as a failed project | Active | Milestone 0 | None without protocol amendment |
+| Lock non-inferiority margins before the main experiment | Prevents margin drift between pilot and main experiment | Pending | Before Milestone 6 | Pilot variance estimate with documented rationale |
+| Build a validator gold set before using validator scores for gating | Validator errors corrupt downstream compliance and data-quality metrics | Active | Before Milestone 2 | Validator misses deployment thresholds |
+| Use `HighCompliance-Constrained` unless token-level/FSA constraints have zero false accepts | Prevents overstating a response-level validator as a hard constraint | Active | Before ablation runs | Decoder implementation proves strict legality |
 
 ## Immediate Next Steps
 
 1. Draft `dialect/spec.md`.
-2. Choose the first open-weight model family and tokenizer, plus two comparison tokenizers for the Milestone 1 audit.
-3. Implement a minimal dialect validator.
-4. Build the validator gold set and tokenizer audit for candidate dialect terms.
-5. Build a 50 to 100 prompt smoke-test set and a 200+ prompt gate set covering efficiency, safety, style-only, and concise-English controls.
-6. Run prompt-only and in-context pilot experiments.
-7. Apply the tokenizer and validator gates and decide whether to continue with the positive-claim or null-result framing.
+2. Draft `dialect/structured_simple_spec.md` and freeze it before Milestone 2.
+3. Choose the first open-weight model family and tokenizer, plus two comparison tokenizers for the Milestone 1 audit.
+4. Implement the dialect validator and lightweight structured-simple rule-checker.
+5. Build the validator gold set and tokenizer audit for candidate dialect terms.
+6. Author, screen, and freeze a 50 to 100 prompt smoke-test set and a 200+ prompt gate set covering efficiency, safety, style-only, and concise-English controls.
+7. Run prompt-only and in-context pilot experiments.
+8. Apply the tokenizer and validator gates and decide whether to continue with the positive-claim or null-result framing.
 
 ## Related Work Anchors
 
@@ -940,6 +1012,7 @@ Initial anchors for the paper:
 - Basic English definition/context: https://www.merriam-webster.com/dictionary/Basic%20English
 - ASD-STE100 Simplified Technical English: https://www.asd-europe.org/standards-specifications/simplified-technical-english/
 - Attempto Controlled English: https://arxiv.org/abs/cmp-lg/9603003
+- Nisioi et al. neural text simplification: https://aclanthology.org/P17-2014/
 - ACCESS controllable sentence simplification: https://arxiv.org/abs/1910.02677
 - CROSS controllable sentence simplification with syntactic and lexical constraints: https://arxiv.org/abs/1910.04387
 - Iterative edit-based unsupervised sentence simplification: https://aclanthology.org/2020.acl-main.707/
