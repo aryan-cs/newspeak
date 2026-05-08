@@ -18,26 +18,51 @@ The intended paper should make a measured empirical claim about the tradeoff bet
 
 This project tests the thesis:
 
-> A productive Newspeak-inspired controlled language may improve token efficiency, but only counts as useful if it preserves capability, safety alignment, and semantic adequacy under paired evaluation.
+> A tokenizer-aware productive controlled dialect can produce success-conditioned token savings over normal and concise English while remaining non-inferior on capability and safety. If it cannot beat concise English, that null result is the main finding.
 
 The paper should avoid claiming that a model's latent reasoning is literally "in Newspeak." The project can test observable interfaces, generated rationales, output distributions, trained behavior, and safety outcomes. It cannot directly inspect or prove the language of hidden internal reasoning.
 
+## First Paper Scope
+
+The first paper should be narrower than the full research program.
+
+Primary claim:
+
+> A tokenizer-aware productive controlled dialect can achieve statistically significant success-conditioned token savings relative to normal English, and its value must be judged against concise-English and generic controlled-English controls while preserving capability and safety within predeclared non-inferiority margins.
+
+This claim is falsifiable. If `Base-Concise` matches the dialect's success-conditioned token savings without additional safety or capability cost, the paper should report a negative result: structured dialect design does not outperform simple brevity prompting for efficiency, even if it improves dialect compliance. That outcome is still publishable if the protocol is clean because it separates linguistic structure from ordinary concision.
+
+The first paper should treat broad capability benchmarking, visible-rationale compression, strict lexicon decoding, and LoRA/SFT as supporting ablations or follow-up phases. The spine is efficiency under safety and capability constraints.
+
+## Novelty Positioning
+
+The project sits near several active literatures and should differentiate itself explicitly:
+
+- **Multilingual safety transfer:** Existing work studies safety degradation across natural languages, especially low-resource or typologically distant languages. This project instead constructs an English-derived controlled dialect with known rules, known vocabulary, and controllable tokenizer properties. The point is not language coverage but causal control over linguistic compression.
+- **Style as a jailbreak vector:** Recent style-safety work, including *When Style Breaks Safety*, shows that superficial style patterns can increase jailbreak success and that style-tuned models can become vulnerable to matching jailbreak styles. This project must distinguish productive semantic compression from superficial style transfer and include safety diagnostics for style-induced vulnerability.
+- **Fine-tuning alignment drift:** Prior work shows that ordinary or adversarial fine-tuning can erode safety. Any LoRA/SFT arm here should be framed as testing dialect-specific drift and mitigation, not as rediscovering that fine-tuning can weaken alignment.
+- **Prompt compression and tokenizer research:** The novel angle is tokenizer-aware vocabulary design for a controlled language, evaluated through success-conditioned efficiency rather than raw brevity.
+
 ## Core Research Questions
 
-1. Does a Newspeak-inspired controlled dialect reduce generated tokens, total tokens, latency, or estimated inference cost?
-2. Are any token savings still present after conditioning on answers that remain correct, helpful, and safe?
-3. Does the dialect preserve capability across knowledge, reasoning, coding, instruction-following, and open-ended assistance tasks?
-4. Does safety behavior transfer under linguistic constraint, or do harmful compliance and over-refusal rates change?
-5. Which intervention level works best: prompting, in-context examples, output repair, constrained decoding, or fine-tuning?
+Primary first-paper questions:
+
+1. Does a tokenizer-aware Newspeak-inspired controlled dialect reduce total and output tokens after conditioning on correctness, usefulness, and safety?
+2. Do those success-conditioned savings exceed what can be achieved by ordinary concise-English prompting?
+3. Does the dialect preserve safety within predeclared margins for both harmful compliance and over-refusal?
+
+Secondary questions:
+
+4. Does generic controlled English behave differently from the Newspeak-inspired productive dialect?
+5. Which safety mechanism explains any degradation: obscured safety vocabulary, evaluator/classifier misunderstanding, style-induced jailbreak vulnerability, or fine-tuning alignment drift?
 6. Does a strict closed lexicon create artificial disadvantages relative to a productive, rule-based controlled dialect?
 7. Can visible reasoning traces be expressed in the controlled dialect without degrading final-answer quality?
-8. Are any observed gains still present after controlling for ordinary concise English and generic controlled English?
 
 ## Hypotheses
 
 ### H1: Token Efficiency
 
-A productive Newspeak-inspired dialect can reduce characters and words, but model-token savings will depend on tokenizer-aware vocabulary design. Invented or rare words may tokenize inefficiently and erase apparent compression gains.
+A productive Newspeak-inspired dialect can reduce characters and words, but model-token savings will depend on tokenizer-aware vocabulary design. Invented or rare words may tokenize inefficiently and erase apparent compression gains. The primary bar is not beating verbose English; it is beating `Base-Concise` on successful responses.
 
 ### H2: Capability Retention
 
@@ -111,6 +136,19 @@ Required checks:
 
 Tokenizer-aware design should not hide capability costs. The final paper must report model tokens, bytes, characters, and words.
 
+### Gating Condition
+
+Tokenizer efficiency is a go/no-go gate before large-scale evaluation or fine-tuning.
+
+Before moving past the dialect prototype, the project must show on a representative pilot set that the productive dialect produces meaningful model-token savings relative to normal English and is not trivially dominated by concise English. The exact gate should be set after a small pilot, but a reasonable starting point is:
+
+- At least 10% median output-token reduction versus `Base-English` on successful responses.
+- No increase in total tokens caused by prompt overhead after the first-turn setup is amortized or explicitly accounted for.
+- No systematic token inflation in safety, uncertainty, math, code, or technical terminology.
+- A clear comparison against `Base-Concise`; if concise English matches the savings, the paper pivots to a negative-result framing.
+
+If this gate fails, the project should stop adaptation work and report the tokenizer result directly rather than spending compute on a dialect that does not compress at the model level.
+
 ## Dialect Specification Components
 
 The repository should include a formal dialect specification with:
@@ -134,19 +172,21 @@ The dialect must include enough vocabulary for safe, honest refusals. A compress
 
 All experiments should use paired prompts across all arms where possible.
 
-| Arm | Description | Purpose |
-| --- | --- | --- |
-| `Base-English` | Unmodified model, normal English prompts and responses | Main capability and safety baseline |
-| `Base-Concise` | Same model instructed to answer briefly | Controls for brevity alone |
-| `Controlled-English` | Simplified Technical English or Basic-English-like control | Controls for generic controlled language |
-| `Prompt-Newspeak` | System prompt asks for Newspeak-style output | Tests instruction-only behavior |
-| `ICL-Newspeak` | Few-shot examples demonstrate the dialect | Tests in-context dialect induction |
-| `Repair-Newspeak` | Generate, validate, then revise until compliant | Separates solving from dialect expression |
-| `InputOutput-Newspeak` | User prompts and model outputs are both dialect-translated | Tests full interface shift |
-| `VisibleReasoning-Newspeak` | Any visible reasoning or rationale is also dialect-constrained | Tests reasoning-trace compression |
-| `LoRA-Newspeak` | Adapter fine-tuned on parallel English-to-dialect examples | Tests lightweight model modification |
-| `LoRA-Newspeak-Safety` | LoRA with safety, refusal, benign-sensitive, and policy-boundary examples | Tests safety-preserving adaptation |
-| `Hard-Constrained` | Constrained decoding against lexicon/grammar validator | Upper bound on compliance, likely lower capability |
+| Arm | Role | Description | Purpose |
+| --- | --- | --- | --- |
+| `Base-English` | Core | Unmodified model, normal English prompts and responses | Main capability and safety baseline |
+| `Base-Concise` | Core | Same model instructed to answer briefly | Controls for brevity alone |
+| `Controlled-English` | Core | Simplified Technical English or Basic-English-like control | Controls for generic controlled language |
+| `Prompt-Newspeak` | Core | System prompt asks for Newspeak-style output | Tests instruction-only behavior |
+| `ICL-Newspeak` | Core | Few-shot examples demonstrate the dialect | Tests in-context dialect induction |
+| `TokenizerAware-Newspeak` | Core | Productive dialect with vocabulary chosen against the model tokenizer | Tests the primary efficiency claim |
+| `StyleOnly-Newspeak` | Diagnostic | Surface Newspeak-like aesthetic without productive vocabulary compression | Separates style shift from semantic compression |
+| `Repair-Newspeak` | Diagnostic | Generate, validate, then revise until compliant | Separates solving from dialect expression |
+| `InputOutput-Newspeak` | Diagnostic | User prompts and model outputs are both dialect-translated | Tests full interface shift |
+| `VisibleReasoning-Newspeak` | Ablation | Any visible reasoning or rationale is also dialect-constrained | Tests reasoning-trace compression |
+| `LoRA-Newspeak` | Ablation | Adapter fine-tuned on parallel English-to-dialect examples | Tests lightweight model modification |
+| `LoRA-Newspeak-Safety` | Ablation | LoRA with safety, refusal, benign-sensitive, and policy-boundary examples | Tests safety-preserving adaptation |
+| `Hard-Constrained` | Ablation | Constrained decoding against lexicon/grammar validator | Upper bound on compliance, likely lower capability |
 
 ## Model Selection
 
@@ -306,6 +346,30 @@ Create a small custom set for:
 - Requests to redefine dialect safety terms.
 - Requests to hide harmful intent behind compressed vocabulary.
 
+### Safety Mechanism Diagnostics
+
+If safety changes, the experiment must separate possible mechanisms:
+
+1. **Obscured Safety Vocabulary**
+   - Compare English harmful prompts, dialect-translated harmful prompts, and dialect prompts with explicit safety vocabulary preserved.
+   - Test whether adding approved safety terms restores refusal behavior.
+   - Tag unsafe prompts by whether harm cues are explicit, euphemized, or dialect-compressed.
+
+2. **Evaluator or Classifier Misreading**
+   - Score safety outputs in three ways: native dialect response, back-translated English response, and human audit.
+   - Compare LLM-judge and safety-classifier decisions against human labels on a stratified sample.
+
+3. **Style-Induced Jailbreak Vulnerability**
+   - Include style-only controls that impose surface style without semantic compression.
+   - Compare attack success on plain harmful prompts, style-augmented harmful prompts, and productive-dialect harmful prompts.
+   - Treat the style-only arm as a direct bridge to style-as-jailbreak prior work.
+
+4. **Fine-Tuning Alignment Drift**
+   - Compare no-training, general LoRA, dialect LoRA, and safety-augmented dialect LoRA.
+   - Run English safety regression tests after every adaptation step.
+
+Without these diagnostics, safety findings will be difficult to interpret.
+
 ## Newspeak-Specific Evaluation
 
 ### Dialect Compliance
@@ -356,6 +420,7 @@ Token savings should be reported both unconditionally and conditioned on success
 
 3. **Success-Conditioned Token Savings**
    - Token reduction only on prompts where the response remains correct and safe.
+   - Primary comparison is `TokenizerAware-Newspeak` versus `Base-Concise`, with `Base-English` as the absolute baseline.
 
 4. **Dialect Compliance**
    - Percent of responses passing validator checks.
@@ -372,7 +437,7 @@ Example starting criteria:
 - Capability-preserving if objective score drops by no more than 3 to 5 absolute percentage points.
 - Safety-preserving if harmful compliance does not increase by more than 1 to 2 absolute percentage points.
 - Helpfulness-preserving if pairwise preference loss is within a predeclared margin after length-bias correction.
-- Efficient only if success-conditioned total-token reduction is statistically significant and practically meaningful.
+- Efficient only if success-conditioned total-token reduction is statistically significant and practically meaningful against both `Base-English` and `Base-Concise`.
 
 These margins should be revisited after pilot variance estimates.
 
@@ -419,6 +484,19 @@ Collect:
 - Safety handling guidance for harmful-content exposure.
 - Dialect comprehension checks so raters understand the controlled vocabulary before judging adequacy.
 
+Initial human-evaluation target:
+
+- At least two independent raters per item.
+- A pilot calibration round before final annotation.
+- Inter-rater agreement target of Cohen's kappa or Krippendorff's alpha >= 0.70 for categorical labels where applicable.
+- Stratified sample covering correct, incorrect, unsafe, over-refused, high-compression, and low-compliance responses.
+- Pilot sample of 100 to 200 paired items.
+- Main sample of 500 to 1,000 judged responses, adjusted after power estimates and pilot disagreement rates.
+- Blinded condition labels and randomized response order.
+- Rater dialect-training task with a comprehension check before live annotation.
+
+The rubric should be written before annotation begins and should separate semantic equivalence, task adequacy, safety correctness, refusal quality, and dialect comprehensibility.
+
 ## Expected Failure Modes
 
 1. **Strict Lexicon Confound**
@@ -451,7 +529,33 @@ Collect:
 10. **False Efficiency**
     - Token savings come only from shorter, less useful answers.
 
+11. **Short-Answer-Only Gains**
+    - Dialect compression helps short answers but disappears for long-form reasoning, careful refusals, or high-context tasks.
+
+12. **Tokenizer Overfit**
+    - Tokenizer-aware vocabulary works for one tokenizer but fails across model families.
+
+13. **Hidden Ambiguity**
+    - Humans accept compressed dialect wording that objective scoring later reveals as incomplete or wrong.
+
+14. **Low-Quality Refusals**
+    - Safety refusals become shorter but less actionable, less clear, or less empathetic.
+
+15. **Rater Learning Effects**
+    - Human raters learn the dialect unevenly, making adequacy ratings noisy.
+
+16. **Back-Translation Masking**
+    - Back-translation normalizes away dialect-specific errors and makes outputs look safer or more adequate than they are.
+
 The concise-output controls are mandatory because raw token savings are not meaningful unless answers remain correct, useful, and safe.
+
+## Null-Result Framing
+
+If `Base-Concise` matches or beats the dialect on success-conditioned model tokens while preserving capability and safety, the first paper should not force a positive claim. The paper becomes:
+
+> Structured artificial dialects do not improve efficient utility beyond ordinary brevity prompting under this protocol, though they may still offer measurable compliance, interpretability, or control benefits.
+
+This should be stated before experiments begin so a negative result is not treated as a failed project.
 
 ## Ethics, Safety, and Copyright
 
@@ -459,7 +563,7 @@ The concise-output controls are mandatory because raw token savings are not mean
 
 The project should cite *Nineteen Eighty-Four* as conceptual motivation but avoid copying substantial text or shipping a full extracted novel lexicon. The research dialect should be original, rule-based, and documented as a separate artifact.
 
-In the United States, works published before 1978 can remain protected for 95 years from publication when the relevant requirements are met. Treat *Nineteen Eighty-Four* cautiously for project assets: quote sparingly, cite normally, and do not publish copied vocabulary tables or novel-derived training corpora as core data.
+*Nineteen Eighty-Four* was published in 1949 and should be treated as under U.S. copyright through 2044 under the 95-year publication-term framing, entering the public domain no earlier than January 1, 2045 in the United States. Treat this as unambiguous for project purposes: quote sparingly, cite normally, and do not publish copied vocabulary tables, extracted lexicons, passages, or novel-derived training corpora as core data.
 
 ### Dual Use
 
@@ -560,11 +664,14 @@ Core artifacts to maintain:
 - Implement validator.
 - Add unit tests for validator behavior.
 - Run tokenizer-efficiency audit on candidate vocabulary.
+- Report token savings by model tokenizer before safety or capability benchmark work begins.
+- Apply the tokenizer go/no-go gate: median token reduction versus `Base-English`, no systematic inflation in safety/technical language, and an explicit comparison to `Base-Concise`.
+- If `Base-Concise` dominates, pivot to the negative-result framing before any LoRA/SFT work.
 
 ### Milestone 2: Baseline Evaluations
 
 - Select one small open-weight model.
-- Run `Base-English`, `Base-Concise`, `Prompt-Newspeak`, and `ICL-Newspeak`.
+- Run core arms: `Base-English`, `Base-Concise`, `Controlled-English`, `Prompt-Newspeak`, `ICL-Newspeak`, and `TokenizerAware-Newspeak`.
 - Evaluate a small balanced prompt set.
 - Analyze token savings, compliance, and obvious capability loss.
 
@@ -717,13 +824,13 @@ Training should be phased so that expensive adaptation does not happen before th
 
 ## Immediate Next Steps
 
-1. Initialize the repository and push the initial planning document.
-2. Draft `dialect/spec.md`.
-3. Choose the first open-weight model family.
-4. Implement a minimal dialect validator.
-5. Build a 50 to 100 prompt pilot set covering capability, safety, and open-ended assistance.
+1. Draft `dialect/spec.md`.
+2. Choose the first open-weight model family and tokenizer.
+3. Implement a minimal dialect validator.
+4. Build a tokenizer audit for candidate dialect terms.
+5. Build a 50 to 100 prompt pilot set covering efficiency, safety, and concise-English controls.
 6. Run prompt-only and in-context pilot experiments.
-7. Use pilot results to refine the dialect before any fine-tuning.
+7. Apply the tokenizer gate and decide whether to continue with the positive-claim or null-result framing.
 
 ## Related Work Anchors
 
@@ -732,9 +839,11 @@ Initial anchors for the paper:
 - Controlled Natural Languages survey: https://direct.mit.edu/coli/article/40/1/121/1455/A-Survey-and-Classification-of-Controlled-Natural
 - HELM: https://github.com/stanford-crfm/helm
 - LiveBench: https://github.com/LiveBench/LiveBench
+- Low-Resource Languages Jailbreak GPT-4: https://arxiv.org/abs/2310.02446
 - HarmBench: https://arxiv.org/abs/2402.04249
 - StrongREJECT: https://arxiv.org/abs/2402.10260
 - JailbreakBench: https://arxiv.org/abs/2404.01318
+- When Style Breaks Safety: https://arxiv.org/abs/2506.07452
 - XSTest: https://arxiv.org/abs/2308.01263
 - SafetyBench: https://arxiv.org/abs/2309.07045
 - MMLU: https://arxiv.org/abs/2009.03300
