@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "status": "scaffold",
+  "notes": "Benchmark adapters are declared here before implementation. No benchmark data is vendored.",
+  "core_evals": [
+    {"id": "mmlu_or_mmlu_pro", "role": "knowledge_reasoning", "status": "planned"},
+    {"id": "gsm8k", "role": "math", "status": "planned"},
+    {"id": "humaneval_or_mbpp", "role": "code", "status": "planned"},
+    {"id": "ifeval", "role": "instruction_following", "status": "planned"},
+    {"id": "harmbench_or_strongreject", "role": "harmful_compliance", "status": "planned"},
+    {"id": "xstest", "role": "over_refusal", "status": "planned"}
+  ],
+  "custom_sets": [
+    {"id": "smoke_set", "path": "data/cards/smoke_prompt_set_card.md", "status": "planned"},
+    {"id": "gate_set", "path": "data/cards/gate_prompt_set_card.md", "status": "planned"},
+    {"id": "validator_gold", "path": "data/eval_sets/validator_gold/", "status": "planned"}
+  ]
+}

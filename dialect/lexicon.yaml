@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "function_words": [
+    "a", "an", "and", "are", "as", "at", "be", "because", "but", "by", "can",
+    "do", "does", "for", "from", "has", "have", "i", "if", "in", "is", "it", "may",
+    "must", "not", "of", "on", "or", "so", "that", "the", "this", "to", "use",
+    "when", "with", "without", "you", "your"
+  ],
+  "roots": {
+    "task": [
+      "answer", "ask", "check", "choose", "compare", "count", "define", "edit",
+      "explain", "find", "give", "help", "list", "make", "plan", "read",
+      "reason", "show", "solve", "test", "write"
+    ],
+    "quality": [
+      "clear", "correct", "false", "good", "safe", "same", "short", "strong",
+      "true", "useful", "valid", "wrong"
+    ],
+    "knowledge": [
+      "cause", "claim", "data", "fact", "idea", "logic", "model", "rule",
+      "score", "text", "token", "word"
+    ],
+    "relation": [
+      "after", "before", "down", "high", "low", "more", "less", "near", "over",
+      "under", "up"
+    ]
+  },
+  "technical_allowlist": [
+    "API", "BBQ", "GSM8K", "HarmBench", "HumanEval", "IFEval", "JSON", "LoRA",
+    "MATH", "MBPP", "MMLU", "Python", "XSTest"
+  ],
+  "forbidden_source_terms": [
+    "INGSOC", "Newspeak", "Oldspeak", "doublethink", "goodthink", "thoughtcrime"
+  ]
+}

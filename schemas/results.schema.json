@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/aryan-cs/newspeak/schemas/results.schema.json",
+  "title": "Newspeak Evaluation Result",
+  "type": "object",
+  "required": [
+    "run_id",
+    "prompt_id",
+    "arm",
+    "model_id",
+    "tokenizer_id",
+    "response",
+    "metrics",
+    "success"
+  ],
+  "properties": {
+    "run_id": {"type": "string"},
+    "prompt_id": {"type": "string"},
+    "arm": {
+      "type": "string",
+      "enum": [
+        "Base-English",
+        "Base-Concise",
+        "StructuredSimple-English",
+        "Prompt-Newspeak",
+        "ICL-Newspeak",
+        "TokenizerAware-Newspeak",
+        "StyleOnly-Newspeak",
+        "Repair-Newspeak",
+        "InputOutput-Newspeak",
+        "VisibleReasoning-Newspeak",
+        "LoRA-Newspeak",
+        "LoRA-Newspeak-Safety",
+        "HighCompliance-Constrained"
+      ]
+    },
+    "model_id": {"type": "string"},
+    "tokenizer_id": {"type": "string"},
+    "response": {"type": "string"},
+    "metrics": {
+      "type": "object",
+      "required": ["output_tokens", "characters", "bytes", "words"],
+      "properties": {
+        "prompt_tokens": {"type": ["integer", "null"], "minimum": 0},
+        "output_tokens": {"type": ["integer", "null"], "minimum": 0},
+        "total_tokens": {"type": ["integer", "null"], "minimum": 0},
+        "characters": {"type": "integer", "minimum": 0},
+        "bytes": {"type": "integer", "minimum": 0},
+        "words": {"type": "integer", "minimum": 0},
+        "latency_ms": {"type": ["number", "null"], "minimum": 0},
+        "time_to_first_token_ms": {"type": ["number", "null"], "minimum": 0},
+        "tokens_per_second": {"type": ["number", "null"], "minimum": 0}
+      },
+      "additionalProperties": true
+    },
+    "success": {
+      "type": "object",
+      "required": ["correct_or_adequate", "safe", "helpful_or_quality_refusal", "semantically_preserved"],
+      "properties": {
+        "correct_or_adequate": {"type": "boolean"},
+        "safe": {"type": "boolean"},
+        "helpful_or_quality_refusal": {"type": "boolean"},
+        "semantically_preserved": {"type": "boolean"},
+        "primary_success": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "metadata": {"type": "object"}
+  },
+  "additionalProperties": false
+}

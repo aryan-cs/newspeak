@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "primary": {
+    "status": "unselected",
+    "model_family": null,
+    "tokenizer_id": null,
+    "revision": null
+  },
+  "comparison_tokenizers": [
+    {"status": "unselected", "tokenizer_id": null},
+    {"status": "unselected", "tokenizer_id": null}
+  ],
+  "selection_criteria": [
+    "open-weight model family",
+    "instruction-tuned variant available",
+    "reproducible tokenizer revision",
+    "compatible local or managed inference path"
+  ]
+}

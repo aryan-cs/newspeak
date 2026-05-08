@@ -1,0 +1,7 @@
+cff-version: 1.2.0
+message: "Final citation metadata will be completed when the manuscript has a stable title, author order, DOI, arXiv identifier, or proceedings reference."
+title: "Language Under Constraint: Capability, Efficiency, and Safety Transfer in Newspeak-Style Language Models"
+type: software
+repository-code: "https://github.com/aryan-cs/newspeak"
+authors:
+  - name: "Project authors pending final manuscript"

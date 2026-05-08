@@ -1,0 +1,35 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+venv/
+build/
+dist/
+*.egg-info/
+
+# Generated or bulky research artifacts.
+data/raw/*
+data/interim/*
+data/processed/*
+results/pilots/*
+results/main/*
+/checkpoints/
+/models/
+*.safetensors
+*.gguf
+*.pt
+*.pth
+
+# Keep directory policy/readme files tracked.
+!data/raw/README.md
+!data/interim/README.md
+!data/processed/README.md
+!results/pilots/README.md
+!results/main/README.md
+
+# Local notebooks and OS/editor state.
+.DS_Store
+.ipynb_checkpoints/
+*.swp

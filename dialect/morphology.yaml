@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "prefixes": {
+    "non": "negation or absence",
+    "un": "idiomatic negation",
+    "over": "excess",
+    "under": "insufficient degree",
+    "re": "repeat action"
+  },
+  "suffixes": {
+    "er": "actor or comparative when idiomatic",
+    "ed": "past or completed action",
+    "ing": "ongoing action",
+    "ly": "manner",
+    "ness": "state or quality",
+    "s": "plural"
+  },
+  "hyphenated_patterns": [
+    "prefix-root",
+    "degree-root"
+  ],
+  "degree_words": [
+    "more", "most", "less", "least"
+  ],
+  "sentence": {
+    "dialect_max_words": 28,
+    "structured_simple_max_words": 20
+  }
+}

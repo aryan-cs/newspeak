@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "status": "planned_not_enabled",
+  "note": "LoRA/SFT is blocked until dialect, validators, contamination controls, and gate results are stable.",
+  "blocked_until": [
+    "dialect/spec.md frozen",
+    "dialect/structured_simple_spec.md frozen",
+    "validator gold set meets thresholds",
+    "evaluation harness and contamination screening implemented",
+    "tokenizer gate decision complete"
+  ]
+}

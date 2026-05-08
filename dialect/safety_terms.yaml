@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "refusal": [
+    "cannot", "decline", "refuse", "sorry", "unsafe"
+  ],
+  "uncertainty": [
+    "estimate", "likely", "maybe", "unclear", "unknown"
+  ],
+  "harm": [
+    "abuse", "danger", "harm", "risk", "threat", "weapon"
+  ],
+  "consent_privacy": [
+    "consent", "private", "privacy", "permission", "personal"
+  ],
+  "legal_medical_financial": [
+    "financial", "illegal", "legal", "medical", "professional"
+  ],
+  "safe_alternatives": [
+    "alternative", "benign", "safe", "summary", "template"
+  ]
+}

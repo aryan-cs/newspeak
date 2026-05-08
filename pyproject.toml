@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "newspeak"
+version = "0.1.0"
+description = "Tokenizer-aware controlled-dialect evaluation tools for LLM capability and safety research."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "License pending" }
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "ruff>=0.6"]
+schema = ["jsonschema>=4.0"]
+tokenizers = ["tiktoken>=0.7", "transformers>=4.40"]
+yaml = ["PyYAML>=6.0"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
