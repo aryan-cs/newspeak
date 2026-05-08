@@ -54,11 +54,11 @@ If the target changes to NeurIPS Datasets and Benchmarks, emphasize the dialect 
 The project sits near several active literatures and should differentiate itself explicitly:
 
 - **Multilingual safety transfer:** Existing work studies safety degradation across natural languages, especially low-resource or typologically distant languages. This project instead constructs an English-derived controlled dialect with known rules, known vocabulary, and controllable tokenizer properties. The point is not language coverage but causal control over linguistic compression.
-- **Style as a jailbreak vector:** Recent style-safety work, including *When Style Breaks Safety*, shows that superficial style patterns can increase jailbreak success and that style-tuned models can become vulnerable to matching jailbreak styles. This project must distinguish productive semantic compression from superficial style transfer and include safety diagnostics for style-induced vulnerability.
+- **Style as a jailbreak vector:** Recent style-safety work, including the ICLR 2026 paper *When Style Breaks Safety*, shows that superficial style patterns can increase jailbreak success and that style-tuned models can become vulnerable to matching jailbreak styles. This project must distinguish productive semantic compression from superficial style transfer and include safety diagnostics for style-induced vulnerability.
 - **Fine-tuning alignment drift:** Prior work shows that ordinary or adversarial fine-tuning can erode safety. Any LoRA/SFT arm here should be framed as testing dialect-specific drift and mitigation, not as rediscovering that fine-tuning can weaken alignment.
 - **Prompt compression and tokenizer research:** The novel angle is tokenizer-aware vocabulary design for a controlled language, evaluated through success-conditioned efficiency rather than raw brevity.
 
-Before submission, re-check *When Style Breaks Safety* and related style-jailbreak work for overlap with `StyleOnly-Newspeak`. If those papers already test productive compression versus surface style, the manuscript must narrow its claim to the tokenizer-aware success-conditioned protocol or cite their result as prior confirmation.
+Before submission, cite the final ICLR 2026 version of *When Style Breaks Safety* and re-check related style-jailbreak work for overlap with `StyleOnly-Newspeak`. The manuscript must explicitly compare that paper's superficial-style setting against this project's `StyleOnly-Newspeak` arm.
 
 ## Core Research Questions
 
@@ -70,7 +70,7 @@ Primary first-paper questions:
 
 Secondary questions:
 
-4. Does generic controlled English behave differently from the Newspeak-inspired productive dialect?
+4. Does `StructuredSimple-English` behave differently from the Newspeak-inspired productive dialect when both use the same productive-control framework?
 5. Which safety mechanism explains any degradation: obscured safety vocabulary, evaluator/classifier misunderstanding, style-induced jailbreak vulnerability, or fine-tuning alignment drift?
 6. Does a strict closed lexicon create artificial disadvantages relative to a productive, rule-based controlled dialect?
 7. Can visible reasoning traces be expressed in the controlled dialect without degrading final-answer quality?
@@ -159,9 +159,12 @@ The first paper is scoped as **primary-tokenizer optimized**. Cross-tokenizer re
 
 Tokenizer efficiency is a go/no-go gate before large-scale evaluation or fine-tuning.
 
-Before moving past the dialect prototype, the project must show on a representative pilot set that the productive dialect produces meaningful model-token savings relative to normal English and is not trivially dominated by concise English. The exact gate should be set after a small pilot, but a reasonable starting point is:
+Before moving past the dialect prototype, the project must show on a representative gate set that the productive dialect produces meaningful model-token savings relative to normal English and is not trivially dominated by concise English. The gate should use at least 200 prompts before success-conditioning and should retain at least 120 successful paired items after success-conditioning. If fewer than 120 paired items survive, expand the gate set or treat the decision as provisional.
+
+The exact gate should be revised after smoke-test variance estimates, but a reasonable starting point is:
 
 - At least 10% median output-token reduction versus `Base-English` on successful responses.
+- Paired bootstrap confidence interval with positive direction for the token-reduction effect.
 - No increase in total tokens caused by prompt overhead after the first-turn setup is amortized or explicitly accounted for.
 - No systematic token inflation in safety, uncertainty, math, code, or technical terminology.
 - A clear comparison against `Base-Concise`; if concise English matches the savings, the paper pivots to a negative-result framing.
@@ -195,7 +198,7 @@ All experiments should use paired prompts across all arms where possible.
 | --- | --- | --- | --- |
 | `Base-English` | Core | Unmodified model, normal English prompts and responses | Main capability and safety baseline |
 | `Base-Concise` | Core | Same model instructed to answer briefly | Controls for brevity alone |
-| `Controlled-English` | Core | Basic English 850-word controlled-language baseline with the same technical passthrough policy as the dialect | Controls for generic controlled language |
+| `StructuredSimple-English` | Core | Project-owned comparator using short plain sentences, one idea per sentence, explicit negation/degree morphology, technical passthrough, and no tokenizer-aware compression lexicon | Controls for structured language constraint |
 | `Prompt-Newspeak` | Core | System prompt asks for Newspeak-style output | Tests instruction-only behavior |
 | `ICL-Newspeak` | Core | Few-shot examples demonstrate the dialect | Tests in-context dialect induction |
 | `TokenizerAware-Newspeak` | Core | Productive dialect with vocabulary chosen against the model tokenizer | Tests the primary efficiency claim |
@@ -205,11 +208,15 @@ All experiments should use paired prompts across all arms where possible.
 | `VisibleReasoning-Newspeak` | Ablation | Any visible reasoning or rationale is also dialect-constrained | Tests reasoning-trace compression |
 | `LoRA-Newspeak` | Ablation | Adapter fine-tuned on parallel English-to-dialect examples | Tests lightweight model modification |
 | `LoRA-Newspeak-Safety` | Ablation | LoRA with safety, refusal, benign-sensitive, and policy-boundary examples | Tests safety-preserving adaptation |
-| `Hard-Constrained` | Ablation | Constrained decoding against lexicon/grammar validator | Upper bound on compliance, likely lower capability |
+| `HighCompliance-Constrained` | Ablation | Constrained or validator-guided decoding at a stricter compliance operating point | Near-upper bound on compliance, likely lower capability |
 
 The `StyleOnly-Newspeak` arm is core because safety findings are not interpretable without it. If `StyleOnly-Newspeak` degrades safety as much as `TokenizerAware-Newspeak`, the result likely belongs to style-shift safety rather than semantic compression. If only `TokenizerAware-Newspeak` degrades safety, the mechanism is more likely vocabulary compression, ambiguity, or safety-term loss.
 
-The `Controlled-English` arm is pinned to a Basic English 850-word baseline because it is a general controlled-English comparator with a clear vocabulary-size target and does not import the domain-specific maintenance-document assumptions of ASD-STE100. The project should freeze and ship its normalized control lexicon and rules after confirming redistribution status; if redistribution is not appropriate, publish a fetch/build script and the exact source/version metadata.
+The `StructuredSimple-English` arm should be purpose-built for this study rather than imported from Basic English or ASD-STE100. It uses the same sentence-shape constraints, productive-morphology template, technical passthrough rules, validator categories, and approximate lexicon-size budget as the Newspeak-inspired dialect, but with neutral plain-English roots and no tokenizer-aware compression objective. This controls for structured linguistic constraint without importing a competing controlled-language philosophy.
+
+Basic English is a rejected comparator for the core experiment because its 850-word vocabulary and paraphrase-heavy operator-verb philosophy test a different theory: human learnability and readability rather than tokenizer-aware productive compression. It can remain related-work context, not a core arm.
+
+The constrained-decoding arm is only called `Hard-Constrained` if generation is constrained by a token-level or finite-state legality mechanism with near-zero false accepts on the compliance gold set. If it uses the ordinary response-level validator, report it as `HighCompliance-Constrained`, not as a strict upper bound.
 
 ## Model Selection
 
@@ -712,6 +719,23 @@ Core artifacts to maintain:
 
 `CITATION.cff` should start as a placeholder with the project title, initial authors, repository URL, and message indicating that final citation metadata will be completed when the manuscript has a stable title, author order, DOI, arXiv identifier, or proceedings reference.
 
+`MANIFEST.md` is the reproducibility manifest. It should log model IDs and hashes, tokenizer IDs and versions, dataset names, splits and checksums, prompt-template versions, dialect-spec and validator versions, inference configs, random seeds, hardware/backend details, generated-output locations, and analysis script commits. Update it after every milestone that produces reportable outputs; a run is not considered reproducible until its manifest entry is complete.
+
+Minimum manifest fields:
+
+- Model IDs, model revisions, model hashes, and model licenses.
+- Tokenizer versions and tokenizer checksums.
+- Dataset names, versions, splits, licenses, and checksums.
+- Prompt-set IDs and checksums.
+- Inference config, seeds, sampling parameters, and max-token settings.
+- Hardware, backend, quantization, batch size, and latency-measurement settings.
+- Validator version and validator test-set results.
+- Contamination and deduplication report paths.
+- Result file paths and checksums.
+- Repository commit SHA and remote URL.
+
+Update cadence: after every milestone that produces reportable artifacts, and before any public result, paper draft, model release, or data release.
+
 ## Implementation Milestones
 
 ### Milestone 0: Protocol and Project Scaffold
@@ -731,15 +755,20 @@ Core artifacts to maintain:
 - Run tokenizer-efficiency audit on candidate vocabulary.
 - Audit candidate vocabulary on the primary tokenizer plus at least two other model-family tokenizers.
 - Build a gold-labeled validator test set and meet validator precision/recall deployment thresholds before using validator scores as primary measurements.
-- Report token savings by model tokenizer before safety or capability benchmark work begins.
-- Apply the tokenizer go/no-go gate: median token reduction versus `Base-English`, no systematic inflation in safety/technical language, and an explicit comparison to `Base-Concise`.
-- If `Base-Concise` dominates, pivot to the negative-result framing before any LoRA/SFT work.
+- Report lexical tokenization results by model tokenizer before safety or capability benchmark work begins.
+- Freeze the tokenizer go/no-go criteria for the generated-response gate used in Milestone 2.
 
 ### Milestone 2: Baseline Evaluations
 
 - Select one small open-weight model.
-- Run core arms: `Base-English`, `Base-Concise`, `Controlled-English`, `Prompt-Newspeak`, `ICL-Newspeak`, `TokenizerAware-Newspeak`, and `StyleOnly-Newspeak`.
-- Evaluate a small balanced prompt set.
+- Run core arms: `Base-English`, `Base-Concise`, `StructuredSimple-English`, `Prompt-Newspeak`, `ICL-Newspeak`, `TokenizerAware-Newspeak`, and `StyleOnly-Newspeak`.
+- Screen pilot and gate prompts before use.
+- Run a 50 to 100 prompt smoke test first, then a 200+ prompt gate set before making the tokenizer go/no-go decision.
+- Require at least 120 successful paired items after success-conditioning, or expand the gate set.
+- Apply the tokenizer go/no-go gate: median token reduction versus `Base-English`, no systematic inflation in safety/technical language, paired bootstrap uncertainty, and an explicit comparison to `Base-Concise`.
+- If `Base-Concise` dominates, pivot to the negative-result framing before any LoRA/SFT work.
+- Version, checksum, and freeze all pilot and gate prompts as evaluation-only.
+- Exclude pilot and gate prompts from all later SFT, repair, synthetic-data, translation-example, and few-shot example pools.
 - Analyze token savings, compliance, and obvious capability loss.
 
 ### Milestone 3: Evaluation Harness and Registry
@@ -754,7 +783,7 @@ Core artifacts to maintain:
 ### Milestone 4: Dialect Data Creation
 
 - Build parallel English/dialect dataset.
-- Run benchmark-overlap and near-duplicate screening before finalizing the data.
+- Run benchmark-overlap and near-duplicate screening against pilot prompts, gate prompts, final benchmark prompts, and training candidates before finalizing the data.
 - Validate dialect compliance.
 - Review semantic equivalence.
 - Split into train, validation, and held-out evaluation sets.
@@ -804,9 +833,10 @@ Training should be phased so that expensive adaptation does not happen before th
    - Generate normally, validate dialect compliance, then ask the model to repair violations.
    - This separates task-solving ability from expression under constraint.
 
-4. **Constrained Decoding**
-   - Use as an ablation for strict compliance.
+4. **High-Compliance Constrained Decoding**
+   - Use as an ablation for strict or near-strict compliance.
    - Expect lower capability on open-ended and technical tasks.
+   - Call this arm `Hard-Constrained` only if generation is constrained by a token-level or finite-state legality mechanism with near-zero false accepts on the compliance gold set. If it uses the ordinary response-level validator, report it as `HighCompliance-Constrained`.
 
 5. **LoRA or SFT**
    - Train only after the dialect spec and validator are stable.
@@ -828,6 +858,7 @@ Training should be phased so that expensive adaptation does not happen before th
 
 3. **Related Work**
    - Controlled natural languages for machine translation, technical documentation, semantic parsing, NLG grounding, and domain-specific generation.
+   - Text simplification, lexical simplification, minimal-vocabulary generation, and controllable simplification from 2018 to present.
    - Tokenization and compression.
    - Constrained decoding.
    - Safety and alignment robustness.
@@ -897,7 +928,7 @@ Training should be phased so that expensive adaptation does not happen before th
 2. Choose the first open-weight model family and tokenizer, plus two comparison tokenizers for the Milestone 1 audit.
 3. Implement a minimal dialect validator.
 4. Build the validator gold set and tokenizer audit for candidate dialect terms.
-5. Build a 50 to 100 prompt pilot set covering efficiency, safety, style-only, and concise-English controls.
+5. Build a 50 to 100 prompt smoke-test set and a 200+ prompt gate set covering efficiency, safety, style-only, and concise-English controls.
 6. Run prompt-only and in-context pilot experiments.
 7. Apply the tokenizer and validator gates and decide whether to continue with the positive-claim or null-result framing.
 
@@ -906,16 +937,22 @@ Training should be phased so that expensive adaptation does not happen before th
 Initial anchors for the paper:
 
 - Controlled Natural Languages survey: https://direct.mit.edu/coli/article/40/1/121/1455/A-Survey-and-Classification-of-Controlled-Natural
-- Basic English overview: https://en.wikipedia.org/wiki/Basic_English
+- Basic English definition/context: https://www.merriam-webster.com/dictionary/Basic%20English
 - ASD-STE100 Simplified Technical English: https://www.asd-europe.org/standards-specifications/simplified-technical-english/
 - Attempto Controlled English: https://arxiv.org/abs/cmp-lg/9603003
+- ACCESS controllable sentence simplification: https://arxiv.org/abs/1910.02677
+- CROSS controllable sentence simplification with syntactic and lexical constraints: https://arxiv.org/abs/1910.04387
+- Iterative edit-based unsupervised sentence simplification: https://aclanthology.org/2020.acl-main.707/
+- Controllable text simplification with explicit paraphrasing: https://aclanthology.org/2021.naacl-main.277/
+- CUT controllable unsupervised text simplification: https://arxiv.org/abs/2012.01936
+- Controlled language rules and MT output: https://link.springer.com/article/10.1007/s10590-021-09266-0
 - HELM: https://github.com/stanford-crfm/helm
 - LiveBench: https://github.com/LiveBench/LiveBench
 - Low-Resource Languages Jailbreak GPT-4: https://arxiv.org/abs/2310.02446
 - HarmBench: https://arxiv.org/abs/2402.04249
 - StrongREJECT: https://arxiv.org/abs/2402.10260
 - JailbreakBench: https://arxiv.org/abs/2404.01318
-- When Style Breaks Safety: https://arxiv.org/abs/2506.07452
+- When Style Breaks Safety: https://openreview.net/forum?id=a8QTAl5Hnb
 - XSTest: https://arxiv.org/abs/2308.01263
 - SafetyBench: https://arxiv.org/abs/2309.07045
 - MMLU: https://arxiv.org/abs/2009.03300
