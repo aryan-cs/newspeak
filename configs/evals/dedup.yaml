@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "status": "scaffold",
+  "methods": {
+    "exact_hash": {
+      "enabled": true,
+      "normalization": "lowercase_alphanumeric_token_join"
+    },
+    "ngram_jaccard": {
+      "enabled": true,
+      "ngram_size": 5,
+      "threshold": 0.8
+    },
+    "embedding_similarity": {
+      "enabled": false,
+      "note": "Deferred until prompt data exists and embedding model is selected."
+    }
+  },
+  "required_comparisons": [
+    "smoke_vs_training_candidates",
+    "gate_vs_training_candidates",
+    "eval_vs_training_candidates",
+    "few_shot_vs_eval"
+  ],
+  "report_path_template": "results/pilots/contamination_report.{run_id}.json"
+}

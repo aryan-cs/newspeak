@@ -38,3 +38,15 @@ before any public result, paper draft, model release, or data release.
 - Dialect specs: draft files under `dialect/`
 - Generated results: none.
 - Public claims enabled by this entry: repository structure and protocol only.
+
+Machine-readable entry drafts can be generated with:
+
+```bash
+PYTHONPATH=src python3 scripts/create_manifest_entry.py \
+  --entry-id scaffold-2026-05-08 \
+  --status scaffold \
+  PLAN.md README.md
+```
+
+Generated manifest-entry JSON is a draft input for this file. It does not
+replace the human-readable notes about scope, exclusions, and claim status.

@@ -17,6 +17,8 @@ Implementation is in Milestone 0/1:
 - Dialect and `StructuredSimple-English` specifications.
 - Initial validator and structured-simple checker.
 - Tokenizer-audit scaffolding.
+- Prompt-set validation, summarization, and contamination-check scaffolding.
+- Manifest-entry generation for reproducibility logging.
 - Paper skeleton and related-work notes.
 
 No model evaluations, benchmark scores, or paper results have been run yet.
@@ -51,6 +53,16 @@ validators. Optional tokenizer backends can be installed later through the
 ```bash
 python3 -m compileall src scripts
 PYTHONPATH=src python3 -m pytest
+PYTHONPATH=src python3 scripts/check_protocol_consistency.py
+```
+
+Useful protocol checks:
+
+```bash
+PYTHONPATH=src python3 scripts/validate_prompt_set.py data/eval_sets/gate/prompts.jsonl
+PYTHONPATH=src python3 scripts/summarize_prompt_set.py data/eval_sets/gate/prompts.jsonl
+PYTHONPATH=src python3 scripts/check_contamination.py --config configs/evals/dedup.yaml left.jsonl right.jsonl
+PYTHONPATH=src python3 scripts/create_manifest_entry.py --entry-id scaffold --status scaffold PLAN.md README.md
 ```
 
 ## Data and Results Policy
