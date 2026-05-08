@@ -6,36 +6,42 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
-from statistics import median
 
-from newspeak.evals.success import primary_success
+from newspeak.analysis.results import (
+    load_result_records,
+    paired_success_reduction,
+    summarize_by_arm,
+)
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("jsonl", type=Path)
+    parser.add_argument("--baseline-arm", default=None)
+    parser.add_argument("--candidate-arm", default=None)
+    parser.add_argument(
+        "--token-field",
+        default="output_tokens",
+        choices=["prompt_tokens", "output_tokens", "total_tokens"],
+    )
     args = parser.parse_args(argv)
 
-    rows = []
-    with args.jsonl.open("r", encoding="utf-8") as handle:
-        for line in handle:
-            record = json.loads(line)
-            success = record.get("success", {})
-            record["success"]["primary_success"] = primary_success(success)
-            rows.append(record)
-
-    successful = [row for row in rows if row["success"]["primary_success"]]
-    output_tokens = [
-        row["metrics"]["output_tokens"]
-        for row in successful
-        if row["metrics"].get("output_tokens") is not None
-    ]
-    summary = {
-        "records": len(rows),
-        "primary_success_records": len(successful),
-        "median_output_tokens_successful": median(output_tokens) if output_tokens else None,
+    records = load_result_records(args.jsonl)
+    payload: dict[str, object] = {
+        "records": len(records),
+        "arms": [summary.to_dict() for summary in summarize_by_arm(records)],
     }
-    print(json.dumps(summary, indent=2, sort_keys=True))
+    if args.baseline_arm or args.candidate_arm:
+        if not args.baseline_arm or not args.candidate_arm:
+            parser.error("--baseline-arm and --candidate-arm must be provided together")
+        payload["paired_success_reduction"] = paired_success_reduction(
+            records,
+            baseline_arm=args.baseline_arm,
+            candidate_arm=args.candidate_arm,
+            token_field=args.token_field,
+        ).to_dict()
+
+    print(json.dumps(payload, indent=2, sort_keys=True))
     return 0
 
 

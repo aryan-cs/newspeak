@@ -105,6 +105,12 @@ PYTHONPATH=src python3 scripts/run_eval.py \
   --generations results/pilots/gate-h200.generations.jsonl \
   --success-labels results/pilots/gate-h200.success-labels.jsonl \
   --output results/pilots/gate-h200.results.jsonl
+
+PYTHONPATH=src python3 scripts/analyze_results.py \
+  results/pilots/gate-h200.results.jsonl \
+  --baseline-arm Base-Concise \
+  --candidate-arm TokenizerAware-Newspeak \
+  --token-field output_tokens
 ```
 
 ## Data and Results Policy
